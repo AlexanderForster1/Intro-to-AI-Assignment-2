@@ -1,3 +1,12 @@
+# Parse command-line arguments
+#import argparse
+
+#parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
+#parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
+#parser.add_argument('method', type=str, choices=['bfs', 'dfs', 'astar', 'gbfs', 'cu1', 'cu2'], help='The search method to use: bfs, dfs, astar, gbfs, cu1, or cu2.')
+
+#args = parser.parse_args()
+
 class Node:
     def __init__(self, name, coordinates):
         self.name = name
