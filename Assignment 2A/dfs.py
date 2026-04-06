@@ -3,17 +3,16 @@ def dfs(node_list, src, dest):
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
   
-  # THIS ASSUMES NODES ARE 1, 2, 3, ... WHICH IS PROBLEMATIC
   # explored[k] = True means node k has been explored
-  explored = [False] * (len(node_list) + 1)
+  explored = {n: False for n in node_list}
 
-  expanded = [False] * (len(node_list) + 1)
+  expanded = {n: False for n in node_list}
   expanded[src] = True
 
   path = [] 
   result = _dfs(node_list, src, dest, explored, expanded, path)
   # (Goal, number of nodes, path)
-  return (result, sum(expanded), path)
+  return (result, sum(expanded.values()), path)
 
 # Recursive DFS
 def _dfs(node_list, node_number, dest, explored, expanded, path):
@@ -34,9 +33,3 @@ def _dfs(node_list, node_number, dest, explored, expanded, path):
       
   path.pop()  # Backtrack
   return None
-
-'''
-When all else is equal, nodes should be expanded according to the ascending order, i.e., from the
-smaller to the bigger nodes.
--> SORT THE NODES' ADJACENCY LISTS???
-'''

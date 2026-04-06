@@ -8,7 +8,7 @@ def cus2(node_list, src, dest):
   
   h0 = min(manhattan(node_list, src, d) for d in dest)
   src_node = (src, h0)  # (node number, f value)
-  expanded = {n: False for n in node_list.keys()}
+  expanded = {n: False for n in node_list}
   expanded[src] = True
 
   # (Goal, number of nodes, path)
