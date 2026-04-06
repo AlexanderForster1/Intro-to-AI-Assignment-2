@@ -1,11 +1,15 @@
 # Parse command-line arguments
-#import argparse
+import argparse
+from dfs import dfs
+from cus2 import cus2
 
-#parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
-#parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
-#parser.add_argument('method', type=str, choices=['bfs', 'dfs', 'astar', 'gbfs', 'cu1', 'cu2'], help='The search method to use: bfs, dfs, astar, gbfs, cu1, or cu2.')
+algs = ['BFS', 'DFS', 'AS', 'GBFS', 'CUS1', 'CUS2']
+parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
+parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
+parser.add_argument('method', type=str, choices=algs, 
+                    help=f'The search method to use: {algs.join(', ')}')
 
-#args = parser.parse_args()
+args = parser.parse_args()
 
 class Node:
     def __init__(self, name, coordinates):
@@ -16,8 +20,8 @@ class Node:
     def add_edge(self, edge, cost):
         self.edges.append((edge, cost))
     
+file_path = args.filename
 
-file_path = 'PathFinder-test.txt'
 categories = ['Nodes:', 'Edges:', 'Origin:', 'Destinations:']
 destination = []
 origin = []
@@ -30,7 +34,6 @@ with open(file_path, 'r') as file:
         if line in categories:
             current_category = line
             continue
-        
         
         if line == '':
             continue
@@ -55,6 +58,8 @@ with open(file_path, 'r') as file:
         elif current_category == 'Destinations:':
             destination_nodes = line.strip().split(';')
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
+
+print(dfs(node_list, origin, destination))
 
 
 
