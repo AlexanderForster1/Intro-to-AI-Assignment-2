@@ -3,11 +3,18 @@ import argparse
 from dfs import dfs
 from cus2 import cus2
 
-methods = ['BFS', 'DFS', 'AS', 'GBFS', 'CUS1', 'CUS2']
+methods = {
+    'BFS':  None,
+    'DFS':  dfs,
+    'AS':   None,
+    'GBFS': None,
+    'CUS1': None,
+    'CUS2': cus2,
+}
 parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
 parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
-parser.add_argument('method', type=str, choices=methods, 
-                    help=f'The search method to use: {", ".join(methods)}')
+parser.add_argument('method', type=str, choices=methods.keys(), 
+                    help=f'The search method to use: {", ".join(methods.keys())}')
 
 args = parser.parse_args()
 
@@ -64,4 +71,5 @@ with open(file_path, 'r') as file:
 for number, node in node_list.items():
     node.edges.sort(key=lambda e: e[0])
 
-print(dfs(node_list, origin, destination))
+result = methods[args.method](node_list, origin, destination)
+print(result)  # Temp output
