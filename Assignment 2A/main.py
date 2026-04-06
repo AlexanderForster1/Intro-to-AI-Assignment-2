@@ -3,11 +3,11 @@ import argparse
 from dfs import dfs
 from cus2 import cus2
 
-algs = ['BFS', 'DFS', 'AS', 'GBFS', 'CUS1', 'CUS2']
+methods = ['BFS', 'DFS', 'AS', 'GBFS', 'CUS1', 'CUS2']
 parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
 parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
-parser.add_argument('method', type=str, choices=algs, 
-                    help=f'The search method to use: {algs.join(', ')}')
+parser.add_argument('method', type=str, choices=methods, 
+                    help=f'The search method to use: {methods.join(', ')}')
 
 args = parser.parse_args()
 
@@ -58,6 +58,11 @@ with open(file_path, 'r') as file:
         elif current_category == 'Destinations:':
             destination_nodes = line.strip().split(';')
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
+
+# Sort the adjacency list of each node so that nodes are expanded in ascending order 
+# (NOTE 1 in asm specifications)
+for node in node_list:
+    node.edges.sort(key=lambda e: e[0])
 
 print(dfs(node_list, origin, destination))
 
