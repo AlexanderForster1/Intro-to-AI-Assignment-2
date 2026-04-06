@@ -67,7 +67,7 @@ with open(file_path, 'r') as file:
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
 
 # Sort the adjacency list of each node so that nodes are expanded in ascending order 
-# (NOTE 1 in asm specifications)
+# (NOTE 2 in asm specifications)
 for number, node in node_list.items():
     node.edges.sort(key=lambda e: e[0])
 
