@@ -8,7 +8,7 @@
 | g06.txt | Cycles in graph |
 | g07.txt | Multiple destination nodes |
 | g08.txt | Multiple destination nodes with the same path cost |
-| g09.txt | One destination node with multiple paths with the same cost |
+| g09.txt | One destination node with multiple paths of the same cost |
 | g10.txt | Shuffled node numbers |
 | g11.txt | Sparse graph |
 | g12.txt | Dense graph |
