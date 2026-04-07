@@ -70,8 +70,11 @@ for filepath in input_filepaths:
   for method in methods:
     test_cases.append((filepath, method))
 
-@pytest.mark.parametrize("filepath, method", test_cases)
-def test_graph_search(filepath, method):
+# Test that the full output matches the assignment specifications
+# Only applies to test cases where expected outputs had been manually calculated
+# g01.txt -> g07.txt
+@pytest.mark.parametrize("filepath, method", test_cases[:(7*len(methods))])
+def test_complete(filepath, method):
   filename = Path(filepath).name
 
   # Run main.py
