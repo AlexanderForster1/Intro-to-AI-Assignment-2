@@ -19,6 +19,7 @@ def cus2(node_list, src, dest):
 # node = (node number, node's f value)
 def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
   node_number, node_f = node
+  print(f"{node_number} {path}")
 
   if node_number in dest:
     return ([node_number], node_f)  # Destination node found
@@ -45,6 +46,7 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
     return [], math.inf
 
   while True:
+    # Explore the most promising node
     best = heapq.heappop(pq)
     best_node = (best[1], best[0])  # (node number, node f)  
 
@@ -52,24 +54,29 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
     if best[0] > f_limit:
       return ([], best[0])
     
+    # Keep track of the next best path
     alternative_f = pq[0][0] if pq else math.inf  # Second best f value
     new_limit = min(f_limit, alternative_f)
-    # If the current path is better than the alternative, keep searching deeper
+    # When the current path is better than the alternative, keep searching deeper
     result, best_f = _rbfs(node_list, 
                            best_node, dest, 
                            new_limit, 
                            g[best[1]], 
-                           path+[best[1]],
+                           path + [best[1]],
                            expanded
                            )
-
-    # Push the explored node back onto the heap with its new f-value
-    heapq.heappush(pq, (best_f, best[1]))
 
     # If destination node found, return result
     # else explore the next best successor
     if result:
       return [node_number] + result, best_f
+    
+    # If subtree is exhausted, do not reinsert
+    if best_f == math.inf:
+      return [], math.inf
+    
+    # Push the explored node back onto the heap with its new f-value
+    heapq.heappush(pq, (best_f, best[1]))
 
 # TEMPORARY HEURISTIC CODE TO TEST THAT IT WORKS
 # REMOVE AND REPLACE WITH SHARED HEURISTIC CODE
