@@ -19,7 +19,6 @@ def cus2(node_list, src, dest):
 # node = (node number, node's f value)
 def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
   node_number, node_f = node
-  print(f"{node_number} {path}")
 
   if node_number in dest:
     return ([node_number], node_f)  # Destination node found

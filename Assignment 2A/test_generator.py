@@ -234,7 +234,7 @@ def export():
   if not node_list:
     return
   timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-  with open(f'test_cases/g{timestamp}.txt', 'w') as f:
+  with open(f'test_cases/inputs/g{timestamp}.txt', 'w') as f:
     f.write("Nodes:\n")
     for key, node in node_list.items():
       f.write(f"{key}: ({node.coordinates[0]},{node.coordinates[1]})\n")
@@ -253,7 +253,7 @@ def export():
 def main():
   os.system('cls')
   parse_input()
-  
+
   clock = pygame.time.Clock()
   edging = False  # ;)
   node_name = len(node_list) + 1
