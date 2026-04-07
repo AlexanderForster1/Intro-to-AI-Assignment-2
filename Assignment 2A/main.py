@@ -72,4 +72,8 @@ for number, node in node_list.items():
     node.edges.sort(key=lambda e: e[0])
 
 result = methods[args.method](node_list, origin, destination)
-print(result)  # Temp output
+goal, number_of_nodes, path = result
+output = f'''{args.filename} {args.method}
+{goal} {number_of_nodes}
+{path}'''
+print(output)
