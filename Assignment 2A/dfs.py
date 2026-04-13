@@ -1,4 +1,11 @@
-def dfs(node_list, src, dest):
+from input import Node
+
+def dfs(node_list: dict[int, Node], src: int, dest: list[int]):
+  '''
+  Searches the graph using DFS.
+  Returns a tuple of the goal node number, the number of nodes created
+  during the search, and the path from the source the goal node.
+  '''
   # Check if the source and destination nodes are in the node list
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
@@ -16,6 +23,10 @@ def dfs(node_list, src, dest):
 
 # Recursive DFS
 def _dfs(node_list, node_number, dest, explored, expanded, path):
+  '''
+  Performs recursive DFS, returns the destination node if a solution
+  is found. Else returns None.
+  '''
   explored[node_number] = True
   path.append(node_number)
 

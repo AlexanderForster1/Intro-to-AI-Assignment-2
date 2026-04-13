@@ -1,7 +1,13 @@
+from input import Node
 import math
 import heapq
 
-def cus2(node_list, src, dest):
+def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
+  '''
+  Searches the graph using recursive best first search (RBFS).
+  Returns a tuple of the goal node number, the number of nodes created
+  during the search, and the path from the source the goal node.
+  '''
   # Check if the source and destination nodes are in the node list
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
@@ -18,6 +24,10 @@ def cus2(node_list, src, dest):
 
 # node = (node number, node's f value)
 def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
+  '''
+  Performs recursive RBFS. Returns an empty array or a one-item array
+  containing the destination node and its f-value.
+  '''
   node_number, node_f = node
 
   if node_number in dest:
@@ -72,7 +82,12 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
     
     # If subtree is exhausted, do not reinsert
     if best_f == math.inf:
-      return [], math.inf
+      # If there are no candidates left, stop exploring this subtree completely
+      if not pq:
+        return [], math.inf
+      # Else try the other candidates
+      else:
+        continue
     
     # Push the explored node back onto the heap with its new f-value
     heapq.heappush(pq, (best_f, best[1]))
