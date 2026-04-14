@@ -1,11 +1,13 @@
 # Parse command-line arguments
-#import argparse
+import argparse
+from bfs import bfs
+from cus1 import cu1
 
-#parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
-#parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
-#parser.add_argument('method', type=str, choices=['bfs', 'dfs', 'astar', 'gbfs', 'cu1', 'cu2'], help='The search method to use: bfs, dfs, astar, gbfs, cu1, or cu2.')
+parser = argparse.ArgumentParser(description='Search for a path from origin to destination nodes.')
+parser.add_argument('filename', type=str, help='The path to the input file containing nodes, edges, origin, and destinations.')
+parser.add_argument('method', type=str, choices=['bfs', 'dfs', 'astar', 'gbfs', 'cu1', 'cu2'], help='The search method to use: bfs, dfs, astar, gbfs, cu1, or cu2.')
 
-#args = parser.parse_args()
+args = parser.parse_args()
 
 class Node:
     def __init__(self, name, coordinates):
@@ -56,6 +58,13 @@ with open(file_path, 'r') as file:
             destination_nodes = line.strip().split(';')
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
 
-
-
-
+# dummy testing code
+if args.method == 'cu1': # 'bfs' or
+    goal, num_nodes, path = cu1(node_list, origin, destination)
+    if goal:
+        print(f"{args.filename} {args.method}")
+        print(f"Goal Node: {goal} Nodes Traversed: {num_nodes}")
+        print(" -> ".join(str(node) for node in path))
+    else:
+        print(f"{args.filename} {args.method}")
+        print("No path found")
