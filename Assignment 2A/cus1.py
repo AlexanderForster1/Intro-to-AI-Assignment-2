@@ -1,6 +1,6 @@
 from collections import deque
 
-# Custom Search 1 - Bi-directional BFS algorithm (inspired by D*)
+# Custom Search 1 - Bi-directional BFS algorithm (inspired by Bi-directional A*)
 
 def cu1(node_list, origin, destination):
 

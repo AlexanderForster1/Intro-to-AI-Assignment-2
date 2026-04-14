@@ -59,12 +59,30 @@ with open(file_path, 'r') as file:
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
 
 # dummy testing code
-if args.method == 'cu1': # 'bfs' or
+if args.method == 'cu1':
     goal, num_nodes, path = cu1(node_list, origin, destination)
-    if goal:
-        print(f"{args.filename} {args.method}")
-        print(f"Goal Node: {goal} Nodes Traversed: {num_nodes}")
-        print(" -> ".join(str(node) for node in path))
-    else:
-        print(f"{args.filename} {args.method}")
-        print("No path found")
+elif args.method == 'bfs':
+    goal, num_nodes, path = bfs(node_list, origin, destination)
+else:
+    print(f"Unknown method: {args.method} please try again.")
+    exit()
+
+# Shared output for methods
+if goal:
+    print(f"{args.filename} {args.method}")
+    
+    # Calculate path cost
+    path_cost = 0
+    for index in range(len(path) - 1):
+        current = path[index]
+        next_node = path[index + 1]
+        for neighbour, cost in node_list[current].edges:
+            if neighbour == next_node:
+                path_cost += cost
+                break
+    
+    print(f"Goal Node: {goal} Nodes Traversed: {num_nodes} Total Path Cost: {path_cost}")
+    print(" -> ".join(str(node) for node in path))
+else:
+    print(f"{args.filename} {args.method}")
+    print("No path found")
