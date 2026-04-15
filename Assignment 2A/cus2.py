@@ -1,4 +1,5 @@
 from input import Node
+from heuristics import manhattan_distance
 import math
 import heapq
 
@@ -12,23 +13,23 @@ def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
   
-  h0 = min(manhattan(node_list, src, d) for d in dest)
+  h0 = min(manhattan_distance(node_list[src], node_list[d]) for d in dest)
   src_node = (src, h0)  # (node number, f value)
-  expanded = {n: False for n in node_list}
-  expanded[src] = True
+  visited = {n: False for n in node_list}
 
   # (Goal, number of nodes, path)
-  path, _ = _rbfs(node_list, src_node, dest, math.inf, 0, [src], expanded)
+  path, _ = _rbfs(node_list, src_node, dest, math.inf, 0, [src], visited)
   goal = path[-1] if path else None
-  return (goal, sum(expanded.values()), path)
+  return (goal, sum(visited.values()), path)
 
 # node = (node number, node's f value)
-def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
+def _rbfs(node_list, node, dest, f_limit, node_g, path, visited):
   '''
   Performs recursive RBFS. Returns an empty array or a one-item array
   containing the destination node and its f-value.
   '''
   node_number, node_f = node
+  visited[node_number] = True
 
   if node_number in dest:
     return ([node_number], node_f)  # Destination node found
@@ -42,11 +43,10 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
     neighbour = edge[0]
     if neighbour in path:
       continue
-    expanded[neighbour] = True
 
     g[neighbour] = node_g + edge[1]  # Cost from src node to successor node
 
-    h = min(manhattan(node_list, neighbour, d) for d in dest)
+    h = min(manhattan_distance(node_list[neighbour], node_list[d]) for d in dest)
     # As backtracking only happens if the current becomes worse than the alternative
     f = max(g[neighbour] + h, node_f)
     heapq.heappush(pq, (f, neighbour))  # (node's f value, node number)
@@ -72,7 +72,7 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
                            new_limit, 
                            g[best[1]], 
                            path + [best[1]],
-                           expanded
+                           visited
                            )
 
     # If destination node found, return result
@@ -91,10 +91,3 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, expanded):
     
     # Push the explored node back onto the heap with its new f-value
     heapq.heappush(pq, (best_f, best[1]))
-
-# TEMPORARY HEURISTIC CODE TO TEST THAT IT WORKS
-# REMOVE AND REPLACE WITH SHARED HEURISTIC CODE
-def manhattan(node_list, node, dest):
-  node_coord = node_list[node].coordinates
-  dest_coord = node_list[dest].coordinates
-  return abs(node_coord[0] - dest_coord[0]) + abs(node_coord[1] - dest_coord[1])
