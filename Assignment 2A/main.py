@@ -82,7 +82,11 @@ if goal:
                 break
     
     print(f"Goal Node: {goal} Nodes Traversed: {num_nodes} Total Path Cost: {path_cost}")
-    print(" -> ".join(str(node) for node in path))
+    print("[", end="")
+    for node in path:
+        node_to_print = (str(node))
+        print(f"{node_to_print}, ", end="") 
+    print("]", end="")
 else:
     print(f"{args.filename} {args.method}")
     print("No path found")
