@@ -69,24 +69,9 @@ else:
 
 # Shared output for methods
 if goal:
-    print(f"{args.filename} {args.method}")
-    
-    # Calculate path cost
-    path_cost = 0
-    for index in range(len(path) - 1):
-        current = path[index]
-        next_node = path[index + 1]
-        for neighbour, cost in node_list[current].edges:
-            if neighbour == next_node:
-                path_cost += cost
-                break
-    
-    print(f"Goal Node: {goal} Nodes Traversed: {num_nodes} Total Path Cost: {path_cost}")
-    print("[", end="")
-    for node in path:
-        node_to_print = (str(node))
-        print(f"{node_to_print}, ", end="") 
-    print("]", end="")
+    print(f"{args.filename} {args.method}") 
+    print(f"Destination Node: [{goal}] Nodes Visited: [{num_nodes}]")
+    print(f"{path}")
 else:
     print(f"{args.filename} {args.method}")
     print("No path found")
