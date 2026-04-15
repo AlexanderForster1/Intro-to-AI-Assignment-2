@@ -1,4 +1,4 @@
-from utils import parse_output, createNxGraph, path_cost
+from utils import parse_output, createNxGraph, path_cost, methods
 from pathlib import Path
 from reference import reference_methods
 import glob
@@ -8,15 +8,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from input import parse_input
-from dfs import dfs
-from cus2 import cus2
 
 # ------------------------- SETUP ------------------------- #
-
-methods = {
-  'DFS':  dfs,
-  'CUS2': cus2,
-}
 
 # Get all input files
 input_folder = Path(__file__).resolve().parent / 'test_cases' / 'inputs'
@@ -26,11 +19,11 @@ graphs = {}
 nx_graphs = {}
 outputs = {}
 for filepath in input_filepaths:
-  node_list, origin, destination = parse_input(filepath)
+  node_list, origin, destinations = parse_input(filepath)
   graphs[filepath] = {
     "node_list": node_list,
     "origin": origin,
-    "destination": destination
+    "destinations": destinations
   }
   nx_graphs[filepath] = createNxGraph(node_list)
   output = parse_output(filepath)
@@ -52,6 +45,9 @@ def test_complete(filepath, method):
   Only applies to test cases where expected outputs had been manually calculated.
   g01.txt -> g07.txt
   '''
+  if methods[method] is None:
+    pytest.skip("Skipping due to unimplemented search method.")
+    
   filename = Path(filepath).name
 
   graph  = graphs[filepath]
@@ -60,20 +56,23 @@ def test_complete(filepath, method):
   if not output:
     pytest.skip("Skipping due to lack of expected output.")
 
-  result = methods[method](graph["node_list"], graph["origin"], graph["destination"])
+  result = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
   assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
 
 # ------------------------- TEST 2 ------------------------- #
 
 @pytest.mark.parametrize("filepath, method", test_cases)
 def test_path(filepath, method):
+  if methods[method] is None:
+    pytest.skip("Skipping due to unimplemented search method.")
+
   filename = Path(filepath).name
   graph    = graphs[filepath]
   nx_graph = nx_graphs[filepath]
   shortest_paths = ["AS", "CUS2"]
 
-  reference_path = reference_methods[method](nx_graph, graph["origin"], graph["destination"])
-  result         = methods[method](graph["node_list"], graph["origin"], graph["destination"])
+  reference_path = reference_methods[method](nx_graph, graph["origin"], graph["destinations"])
+  result         = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
   actual_path    = result[2]
 
   reference_cost = path_cost(graph["node_list"], reference_path)

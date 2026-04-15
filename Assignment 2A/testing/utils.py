@@ -1,8 +1,10 @@
 from pathlib import Path
+from datetime import datetime
 import sys
 import os
 import json
 import networkx as nx
+import random
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from input import Node
@@ -11,6 +13,10 @@ from cus2 import cus2
 
 methods = {
   'DFS':  dfs,
+  'BFS':  None,
+  'GBFS': None,
+  'AS':   None,
+  'CUS1': None,
   'CUS2': cus2,
 }
 
@@ -52,7 +58,8 @@ def parse_output(input_filepath):
 
 def createNxGraph(node_list: dict[int, Node]) -> nx.Graph:
   '''
-  Builds and returns a NetworkX Graph from node_list
+  Builds and returns a NetworkX Graph from node_list.
+  Each node in this NetworkX graph is a Node object.
   '''
   g = nx.DiGraph()
 
@@ -104,3 +111,28 @@ def path_cost(node_list: list[int, Node], path: list[int]):
         break
 
   return total
+
+def manhattan(pos1, pos2):
+  x1, y1 = pos1
+  x2, y2 = pos2
+  return abs(x1-x2) + abs(y1-y2)
+
+def export(node_list: dict[int, Node], origin: int, destinations: list[int]):
+  if not node_list:
+    return
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  with open(f'test_cases/inputs/g{timestamp}.txt', 'w') as f:
+    f.write("Nodes:\n")
+    for key, node in node_list.items():
+      f.write(f"{key}: ({node.coordinates[0]},{node.coordinates[1]})\n")
+    f.write("Edges:\n")
+    for key, node in node_list.items():
+      for edge in node.edges: 
+        f.write(f"({key},{edge[0]}): {edge[1]}\n")
+    f.write("Origin:\n")
+    f.write(f"{origin if origin is not None else random.choice(list(node_list.keys()))}\n")
+    f.write("Destinations:\n")
+    if not destinations:
+      f.write(f"{random.choice(list(node_list.keys()))}")
+    else:
+      f.write(f"{"; ".join(str(dest) for dest in destinations)}")
