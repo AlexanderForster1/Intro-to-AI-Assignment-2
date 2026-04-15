@@ -3,7 +3,10 @@ import sys
 import math
 import random
 import os
-from datetime import datetime
+from utils import manhattan, export
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+from input import Node
 
 '''
 CONTROLS
@@ -45,15 +48,6 @@ font = pygame.font.SysFont('Consolas', 12)
 # Set origins
 origin_x = PADDING
 origin_y = HEIGHT - PADDING
-
-class Node:
-  def __init__(self, name, coordinates):
-    self.name = name
-    self.coordinates = coordinates
-    self.edges = []
-      
-  def add_edge(self, edge, cost):
-    self.edges.append((edge, cost))
 
 node_list = {} 
 
@@ -225,31 +219,6 @@ def grid_to_screen(x, y):
   y = origin_y - y * GRID_SIZE
   return (x, y)
 
-def is_connected(node1, node2):
-  """Returns True if node2 is already in node1's edge list"""
-  node = node_list[node1]
-  return any(e[0] == node2 for e in node.edges)
-
-def export():
-  if not node_list:
-    return
-  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-  with open(f'test_cases/inputs/g{timestamp}.txt', 'w') as f:
-    f.write("Nodes:\n")
-    for key, node in node_list.items():
-      f.write(f"{key}: ({node.coordinates[0]},{node.coordinates[1]})\n")
-    f.write("Edges:\n")
-    for key, node in node_list.items():
-      for edge in node.edges: 
-        f.write(f"({key},{edge[0]}): {edge[1]}\n")
-    f.write("Origin:\n")
-    f.write(f"{origin if origin is not None else random.choice(list(node_list.keys()))}\n")
-    f.write("Destinations:\n")
-    if not destinations:
-      f.write(f"{random.choice(list(node_list.keys()))}")
-    else:
-      f.write(f"{"; ".join(str(dest) for dest in destinations)}")
-
 def main():
   os.system('cls')
   parse_input()
@@ -285,11 +254,11 @@ def main():
             # but this could be changed
             cost = math.ceil(manhattan(p1, p2)) + random.randint(0, 5)
             
-            if not is_connected(selected_node, node):
+            if not node_list[selected_node].has_edge(node):
               node_list[selected_node].add_edge(node, cost)
 
             # Add edge from second node to first node
-            if not is_directed and not is_connected(node, selected_node):
+            if not is_directed and not node_list[node].has_edge(selected_node):
               node_list[node].add_edge(selected_node, cost)
 
             selected_node = None
@@ -324,7 +293,7 @@ def main():
           is_directed = not is_directed
         
         if event.key == pygame.K_e:
-          export()
+          export(node_list, origin, destinations)
 
     draw_grid()
     draw_axes()
@@ -334,11 +303,6 @@ def main():
 
     pygame.display.flip()
     clock.tick(60)
-
-def manhattan(pos1, pos2):
-  x1, y1 = pos1
-  x2, y2 = pos2
-  return abs(x1-x2) + abs(y1-y2)
 
 if __name__ == "__main__":
   main()

@@ -12,3 +12,7 @@
 | g10.txt | Shuffled node numbers |
 | g11.txt | Sparse graph |
 | g12.txt | Dense graph |
+| g13.txt | Tiny graph (V=100, E=1,000) |
+| g14.txt | Small graph (V=1,000, E=10,000) |
+| g15.txt | Medium graph (V=10,000, E=100,000) |
+| g16.txt | Large graph (V=100,000, E=1,000,000)|
