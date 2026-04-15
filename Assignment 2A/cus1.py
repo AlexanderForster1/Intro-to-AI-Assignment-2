@@ -4,72 +4,64 @@ from collections import deque
 
 def cu1(node_list, origin, destination):
 
-    OriginQueue = deque()
-    GoalQueue = deque()
-    visited1 = []
-    visited2 = []
+    # Defensive coding to prevent crashes from missing origin or destination
+    if origin not in node_list:
+        return None, 0, []
+    valid_destinations = [d for d in destination if d in node_list]
+    if not valid_destinations:
+        return None, 0, []
+    
+    # Reversal for bi-direction search
+    reverse_map = {node: [] for node in node_list}
+    for node_id in node_list:
+        for neighbour, cost in node_list[node_id].edges:
+            reverse_map[neighbour].append(node_id)
 
-    OriginQueue.append([origin])
-    visited1.append(origin)
+    # Ditctionary for path storage
+    visited_from_origin = {origin: [origin]}
+    visited_from_goal = {d: [d] for d in destination}
 
-    # To address pylance warnings for unbound sequences
-    destination_node = None
-
-    for destination_node in destination:
-        GoalQueue.append([destination_node])
-        visited2.append(destination_node)
+    origin_queue = deque([origin])
+    goal_queue = deque(destination)
 
     nodes_visited = 0
 
-    while OriginQueue or GoalQueue:
+    while origin_queue and goal_queue:
+        # Forward Search
+        forwards_search = origin_queue.popleft()
+        nodes_visited += 1
 
-        # To address pylance warnings for unbound sequences
-        sequence1 = None 
-        sequence2 = None
-        
-        ForwardPath = OriginQueue.popleft() if OriginQueue else None # To prevent possible crashing
-        BackwardPath = GoalQueue.popleft() if GoalQueue else None
-        
-        if ForwardPath:
-            sequence1 = ForwardPath[-1]
-            nodes_visited += 1
+        # Check if the destination is reached directly (Standard BFS check)
+        if forwards_search in destination:
+            return forwards_search, nodes_visited, visited_from_origin[forwards_search]
 
-            if sequence1 in destination:
-                return sequence1, nodes_visited, ForwardPath
-            
-            for neighbour, cost in node_list[sequence1].edges:
-                if neighbour not in visited1:
-                    visited1.append(neighbour)
-                    OriginQueue.append(ForwardPath + [neighbour])
+        for neighbour, _ in node_list[forwards_search].edges:
+            if neighbour not in visited_from_origin:
+                # Store the path to this neighbor
+                visited_from_origin[neighbour] = visited_from_origin[forwards_search] + [neighbour]
+                
+                # Meetign logic: If the backward search already found this node
+                if neighbour in visited_from_goal:
+                    full_path = visited_from_origin[neighbour] + visited_from_goal[neighbour][::-1][1:]
+                    return full_path[-1], nodes_visited, full_path
+                
+                origin_queue.append(neighbour)
 
-        if BackwardPath:
-            sequence2 = BackwardPath[-1]
-            nodes_visited += 1
-            
-            if sequence2 == origin:
-                return sequence2, nodes_visited, BackwardPath
-            
-            for neighbour, cost in node_list[sequence2].edges:
-                if neighbour not in visited2:
-                    visited2.append(neighbour)
-                    GoalQueue.append(BackwardPath + [neighbour])     
-        
-        # Meeting Logic
-        if ForwardPath and BackwardPath:
-            if sequence1 in visited2 or sequence2 in visited1:
-                meeting = sequence1 if sequence1 in visited2 else sequence2
-                full_path = ForwardPath + BackwardPath[::-1]
-        
-                # Duplicate meeting node removal
-                if full_path.count(meeting) > 1:
-                    duplicate_node = full_path.index(meeting, 1)
-                    full_path = full_path[:duplicate_node] + full_path[duplicate_node + 1:]
+        # Backwards Search
+        backwards_search = goal_queue.popleft()
+        nodes_visited += 1
 
-                return destination_node, nodes_visited, full_path
+        # Reverse Search
+        for parent in reverse_map[backwards_search]:
+            if parent not in visited_from_goal:
+                # Destination searching for Origin direction
+                visited_from_goal[parent] = visited_from_goal[backwards_search] + [parent]
 
-        if nodes_visited >= 78:
-            return None, nodes_visited, []
+                # Meeting Logic: If the forward search already found this node
+                if parent in visited_from_origin:
+                    full_path = visited_from_origin[parent] + visited_from_goal[parent][::-1][1:]
+                    return full_path[-1], nodes_visited, full_path
+                
+                goal_queue.append(parent)
 
     return None, nodes_visited, []
-
-    

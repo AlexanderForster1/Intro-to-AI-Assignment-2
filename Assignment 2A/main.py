@@ -19,7 +19,7 @@ class Node:
         self.edges.append((edge, cost))
     
 
-file_path = 'PathFinder-test.txt'
+file_path = 'Loop-test.txt' #PathFinder-test.txt
 categories = ['Nodes:', 'Edges:', 'Origin:', 'Destinations:']
 destination = []
 origin = []
