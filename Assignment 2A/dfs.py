@@ -1,4 +1,8 @@
 from input import Node
+import sys
+
+# Increase recursion depth limit
+sys.setrecursionlimit(50000)
 
 def dfs(node_list: dict[int, Node], src: int, dest: list[int]):
   '''
@@ -9,7 +13,7 @@ def dfs(node_list: dict[int, Node], src: int, dest: list[int]):
   # Check if the source and destination nodes are in the node list
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
-  
+    
   # explored[k] = True means node k has been explored
   explored = {n: False for n in node_list}
 

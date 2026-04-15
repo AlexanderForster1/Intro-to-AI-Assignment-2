@@ -2,6 +2,10 @@ from input import Node
 from heuristics import manhattan_distance
 import math
 import heapq
+import sys
+
+# Increase recursion depth limit
+sys.setrecursionlimit(50000)
 
 def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
   '''
