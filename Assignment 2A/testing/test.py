@@ -1,68 +1,41 @@
-import subprocess
+from utils import parse_output, createNxGraph, path_cost
+from pathlib import Path
+from reference import reference_methods
 import glob
 import pytest
 import os
-from pathlib import Path
+import sys
 
-# ANSI colour codes
-RED    = "\033[31m"
-BLUE   = "\033[1;34m"
-GREEN  = "\033[32m"
-RESET  = "\033[0m"
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+from input import parse_input
+from dfs import dfs
+from cus2 import cus2
+
+# ------------------------- SETUP ------------------------- #
 
 methods = {
-  "DFS",
-  "CUS2"
+  'DFS':  dfs,
+  'CUS2': cus2,
 }
-
-outputs = {
-  "DFS": None,
-  "BFS": None,
-  "GBFS": None,
-  "AS": None,
-  "CUS1": None,
-  "CUS2": None,
-}
-
-def parse_output(input_filepath):
-  filename = Path(input_filepath).name
-  output_filepath = Path(__file__).resolve().parent / "test_cases" / "outputs" / filename
-
-  current_method = ""
-  # Safeguard for undefined output files
-  try:
-    f = open(output_filepath, "r")
-  except FileNotFoundError:
-    return False
-  with open(output_filepath, "r") as f:
-    for line in f:
-      line = line.strip()
-      if not line:
-        continue
-      if line in outputs.keys():
-        outputs[line] = input_filepath + f" {line}\n"
-        current_method = line
-        count = 0
-        continue
-      if count == 0:
-        outputs[current_method] += line + " "  # goal
-      elif count == 1:
-        outputs[current_method] += line + "\n" # number_of_nodes
-      else:
-        outputs[current_method] += line
-      count += 1
-
-  # Debug
-  '''
-  for key, value in outputs.items():
-    print(key)
-    print(value + '\n')
-  '''
-  return True
 
 # Get all input files
 input_folder = Path(__file__).resolve().parent / 'test_cases' / 'inputs'
 input_filepaths = glob.glob(os.path.join(input_folder, "*.txt"))
+
+graphs = {}
+nx_graphs = {}
+outputs = {}
+for filepath in input_filepaths:
+  node_list, origin, destination = parse_input(filepath)
+  graphs[filepath] = {
+    "node_list": node_list,
+    "origin": origin,
+    "destination": destination
+  }
+  nx_graphs[filepath] = createNxGraph(node_list)
+  output = parse_output(filepath)
+  if output is not None:
+    outputs[filepath] = output
 
 # Generate pytest parametrize for all combinations
 test_cases = []
@@ -70,36 +43,55 @@ for filepath in input_filepaths:
   for method in methods:
     test_cases.append((filepath, method))
 
-# Test that the full output matches the assignment specifications
-# Only applies to test cases where expected outputs had been manually calculated
-# g01.txt -> g07.txt
+# ------------------------- TEST 1 ------------------------- #
+
 @pytest.mark.parametrize("filepath, method", test_cases[:(7*len(methods))])
 def test_complete(filepath, method):
+  '''
+  Tests that the full output matches the assignment specifications.
+  Only applies to test cases where expected outputs had been manually calculated.
+  g01.txt -> g07.txt
+  '''
   filename = Path(filepath).name
 
-  # Run main.py
-  result = subprocess.run(
-    ["python", "main.py", filepath, method],
-    capture_output=True,
-    text=True
-  )
+  graph  = graphs[filepath]
+  output = outputs[filepath][method]
 
-  output = result.stdout.strip()
-  errors = result.stderr.strip()
+  if not output:
+    pytest.skip("Skipping due to lack of expected output.")
 
-  # Parse expected output
-  if not parse_output(filepath):
-    pytest.skip(f"Missing output file for {filename}, skipping.")
+  result = methods[method](graph["node_list"], graph["origin"], graph["destination"])
+  assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
 
-  expected = outputs.get(method)
+# ------------------------- TEST 2 ------------------------- #
 
-  # Logging on failure
-  if errors:
-    print(f"\n[ERRORS] {filename} [{method}]:\n{errors}")
+@pytest.mark.parametrize("filepath, method", test_cases)
+def test_path(filepath, method):
+  filename = Path(filepath).name
+  graph    = graphs[filepath]
+  nx_graph = nx_graphs[filepath]
+  shortest_paths = ["AS", "CUS2"]
 
-  # Add -s flag when running this script to see these logs
-  print(f"{RED}\n[TEST] {filename} [{method}]{RESET}")
-  print(f"{GREEN}[EXPECTED]{RESET}\n{expected}")
-  print(f"{GREEN}[ACTUAL]{RESET}\n{output}\n")
+  reference_path = reference_methods[method](nx_graph, graph["origin"], graph["destination"])
+  result         = methods[method](graph["node_list"], graph["origin"], graph["destination"])
+  actual_path    = result[2]
 
-  assert output == expected, f"{filename} [{method}] output does not match expected."
+  reference_cost = path_cost(graph["node_list"], reference_path)
+  actual_cost    = path_cost(graph["node_list"], actual_path)
+
+  # Check that the actual path matches the reference path
+  # If they don't, check if the two paths at least have the same cost. As the implemented algorithms might expand nodes in a different order than NetworkX, the output paths might be different despite having the same cost. If that is the case, check that the actual path contain nodes of smaller indexes than the reference path.
+
+  # Case 1: Exact match
+  if actual_path == reference_path:
+    assert True
+
+  # Case 2: Different paths but same cost: only applies to shortest paths algorithms
+  elif actual_cost == reference_cost and method in shortest_paths:
+    assert actual_path < reference_path, \
+      f"{filename} [{method}] path differs from reference and does not expand node in ascending order when all else is equal."
+    
+  # Case 3: Straight up wrong
+  else:
+    assert False, \
+      f"{filename} [{method}] path does not match reference."
