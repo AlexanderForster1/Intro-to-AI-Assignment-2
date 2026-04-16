@@ -41,7 +41,7 @@ for filepath in input_filepaths:
 @pytest.mark.parametrize("filepath, method", test_cases[:(7*len(methods))])
 def test_complete(filepath, method):
   '''
-  Tests that the full output matches the assignment specifications.
+  Tests the full output of each search method, including the goal, number of nodes, and path.
   Only applies to test cases where expected outputs had been manually calculated.
   g01.txt -> g07.txt
   '''
@@ -59,10 +59,29 @@ def test_complete(filepath, method):
   result = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
   assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
 
-# ------------------------- TEST 2 ------------------------- #
+# ------------------------- TEST 3 ------------------------- #
 
 @pytest.mark.parametrize("filepath, method", test_cases)
-def test_path(filepath, method):
+def test_valid_path(filepath, method):
+  if methods[method] is None:
+    pytest.skip("Skipping due to unimplemented search method.")
+  filename = Path(filepath).name
+  graph    = graphs[filepath]
+  result   = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
+
+  node_list = graph['node_list']
+  path      = result[2]
+  for i in range(len(path)-1):
+    current = path[i]
+    next    = path[i+1]
+    if (next not in (e[0] for e in node_list[current].edges)):
+      assert False, f"[{method}] does not return a valid path in {filename}."
+  assert True
+
+# ------------------------- TEST 3 ------------------------- #
+
+@pytest.mark.parametrize("filepath, method", test_cases)
+def test_path_match(filepath, method):
   if methods[method] is None:
     pytest.skip("Skipping due to unimplemented search method.")
 
