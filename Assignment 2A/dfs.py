@@ -2,7 +2,7 @@ from input import Node
 import sys
 
 # Increase recursion depth limit
-sys.setrecursionlimit(50000)
+sys.setrecursionlimit(10**5)
 
 def dfs(node_list: dict[int, Node], src: int, dest: list[int]):
   '''
