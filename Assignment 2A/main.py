@@ -2,14 +2,16 @@
 import argparse
 from input import parse_input
 from dfs import dfs
+from bfs import bfs
+from cus1 import cus1
 from cus2 import cus2
 
 methods = {
-    'BFS':  None,
+    'BFS':  bfs,
     'DFS':  dfs,
     'AS':   None,
     'GBFS': None,
-    'CUS1': None,
+    'CUS1': cus1,
     'CUS2': cus2,
 }
 

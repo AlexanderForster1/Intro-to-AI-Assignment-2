@@ -84,6 +84,8 @@ def test_valid_path(filepath, method):
 def test_path_match(filepath, method):
   if methods[method] is None:
     pytest.skip("Skipping due to unimplemented search method.")
+  if reference_methods[method] is None:
+    pytest.skip("Skipping due to unavailable reference method.")
 
   filename = Path(filepath).name
   graph    = graphs[filepath]

@@ -7,6 +7,7 @@ import sys
 # Increase recursion depth limit
 sys.setrecursionlimit(10**5)
 
+# Custom search strategy 2: Recursive Best-first Search using Manhattan distance heuristic
 def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
   '''
   Searches the graph using recursive best first search (RBFS).
