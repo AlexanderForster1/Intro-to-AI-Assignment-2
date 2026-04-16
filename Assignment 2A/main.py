@@ -7,6 +7,9 @@
 
 #args = parser.parse_args()
 
+import argparse
+from astar import astar
+
 class Node:
     def __init__(self, name, coordinates):
         self.name = name
@@ -30,7 +33,6 @@ with open(file_path, 'r') as file:
         if line in categories:
             current_category = line
             continue
-        
         
         if line == '':
             continue
@@ -56,6 +58,11 @@ with open(file_path, 'r') as file:
             destination_nodes = line.strip().split(';')
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
 
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', type=str)
+parser.add_argument('method', type=str)
+args = parser.parse_args()
 
-
-
+result = astar(node_list, origin, destination)
+goal, number_of_nodes, path = result
+print(f'{args.filename} AS\n{goal} {number_of_nodes}\n{path}')
