@@ -15,9 +15,10 @@ from input import parse_input
 input_folder = Path(__file__).resolve().parent / 'test_cases' / 'inputs'
 input_filepaths = glob.glob(os.path.join(input_folder, "*.txt"))
 
-graphs = {}
-nx_graphs = {}
-outputs = {}
+graphs    = {}  # graphs[filepath] contains node list, origin, and destinations parsed from filepath
+nx_graphs = {}  # nx_graphs[filepath] contains the NetworkX Graph version of graphs[filepath]
+outputs   = {}  # outputs[filepath] contains expected output from the corresponding output file
+
 for filepath in input_filepaths:
   node_list, origin, destinations = parse_input(filepath)
   graphs[filepath] = {
@@ -59,10 +60,13 @@ def test_complete(filepath, method):
   result = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
   assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
 
-# ------------------------- TEST 3 ------------------------- #
+# ------------------------- TEST 2 ------------------------- #
 
 @pytest.mark.parametrize("filepath, method", test_cases)
 def test_valid_path(filepath, method):
+  '''
+  Tests that the path returned by each search method is a valid path, i.e. the path exists and is traversable in the given graph.
+  '''
   if methods[method] is None:
     pytest.skip("Skipping due to unimplemented search method.")
   filename = Path(filepath).name
@@ -82,6 +86,9 @@ def test_valid_path(filepath, method):
 
 @pytest.mark.parametrize("filepath, method", test_cases)
 def test_path_match(filepath, method):
+  '''
+  Tests that the path returned by each search method matches the path returned by the reference program. If the two paths do not match, check that the costs of the paths are the same, as the reference program might expand nodes in a different order than the implemented program.
+  '''
   if methods[method] is None:
     pytest.skip("Skipping due to unimplemented search method.")
   if reference_methods[method] is None:
