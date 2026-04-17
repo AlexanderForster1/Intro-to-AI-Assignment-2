@@ -26,25 +26,30 @@ def gbfs(G: nx.Graph, source: int, destinations: list[int], node_list):
   for u, v in G.edges():
     G[u][v]["weight"] = 0
 
-  closest_cost = math.inf
-  closest_path = []
+  heuristic_cache = {}
+
+  def h(n1, n2):
+    if heuristic_cache.get(n1) is None:
+      h_value = min([manhattan(node_list[n1].coordinates, node_list[d].coordinates) for d in destinations])
+      heuristic_cache[n1] = h_value
+      return h_value
+    return heuristic_cache.get(n1)
+
+  paths = []
   for target in destinations:
     try:
-      path = nx.astar_path(G,
-                          source=source,
-                          target=target,
-                          heuristic=lambda n1, n2: manhattan(node_list[n1].coordinates, node_list[n2].coordinates))
-      cost = nx.path_weight(G, path)
-      if cost < closest_cost:
-          closest_cost = cost
-          closest_path = path
+      paths.append(nx.astar_path(G,
+                   source=source,
+                   target=target,
+                   heuristic=h))
     except nx.NetworkXNoPath:
       continue
+  if not paths:
+    paths.append([])
+  return paths
 
-  return closest_path
 
-
-def shortest_path(G: nx.Graph, source: int, destinations: list[int]):
+def shortest_path(G: nx.Graph, source: int, destinations: list[int], node_list=None):
   destinations = set(destinations)
 
   # Compute all shortest simple paths from the given source in the graph

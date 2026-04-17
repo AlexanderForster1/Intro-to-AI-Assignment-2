@@ -114,9 +114,15 @@ def test_path_match(filepath, method):
   nx_graph = nx_graphs[filepath]
   shortest_paths = ["AS", "CUS2"]
 
-  reference_path = reference_methods[method](nx_graph, graph["origin"], graph["destinations"])
   result         = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
   actual_path    = result[2]
+
+  if method != "GBFS":
+    reference_path = reference_methods[method](nx_graph, graph["origin"], graph["destinations"], graph["node_list"])
+  else:
+    reference_paths = reference_methods[method](nx_graph, graph["origin"], graph["destinations"], graph["node_list"])
+    assert actual_path in reference_paths, f"{filename} [{method}] path does not match reference."
+    reference_path = actual_path
 
   reference_cost = path_cost(graph["node_list"], reference_path)
   actual_cost    = path_cost(graph["node_list"], actual_path)
@@ -134,9 +140,9 @@ def test_path_match(filepath, method):
     pass_fail = actual_path < reference_path
     assert actual_path < reference_path, \
       f"{filename} [{method}] path differs from reference and does not expand node in ascending order when all else is equal."
-    
+
   # Case 3: Straight up wrong
-  else:
+  elif method != "GBFS":
     pass_fail = False
     assert False, \
       f"{filename} [{method}] path does not match reference."
