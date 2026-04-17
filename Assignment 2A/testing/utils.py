@@ -6,7 +6,7 @@ import json
 import networkx as nx
 import random
 
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from input import Node
 from astar import astar
 
