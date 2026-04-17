@@ -17,4 +17,4 @@ def gbfs(node_list, destination, origin):
             if neighbor not in visited:
                 heuristic_cost = heuristics.euclidean_distance(node_list[neighbor], node_list[destination[0]])
                 Node_heuristic.append((neighbor, heuristic_cost))
-    return  None, Node_count, visited
+    return  None, Node_count, []
