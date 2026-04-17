@@ -71,7 +71,7 @@ with open(file_path, 'r') as file:
             destination_nodes = line.strip().split(';')
             destination = [int(destination_node.strip()) for destination_node in destination_nodes]
 
-found_node, total_nodes, path = GBFS(node_list, destination, origin)
+found_node, total_nodes, path = gbfs(node_list, destination, origin)
 print("Visited Nodes:", path, " ", "Number of Nodes Visited:", total_nodes)
 if found_node is not None:
     print("Found Destination Node:", found_node)
