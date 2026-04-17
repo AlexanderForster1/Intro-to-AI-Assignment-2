@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from input import Node
 from dfs import dfs
 from bfs import bfs
+from astar import astar
 from cus1 import cus1
 from cus2 import cus2
 
@@ -18,7 +19,7 @@ methods = {
   'DFS':  dfs,
   'BFS':  bfs,
   'GBFS': None,
-  'AS':   None,
+  'AS':   astar,
   'CUS1': cus1,
   'CUS2': cus2,
 }

@@ -72,7 +72,7 @@ def test_complete(filepath, method):
                         "actual_path", "expected_path",
                         "result"])
   
-  assert pass_fail, f"{filename} [{method}] output does not match expected."
+  assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
   
 
 # ------------------------- TEST 2 ------------------------- #
@@ -132,7 +132,7 @@ def test_path_match(filepath, method):
   # Case 2: Different paths but same cost: only applies to shortest paths algorithms
   elif actual_cost == reference_cost and method in shortest_paths:
     pass_fail = actual_path < reference_path
-    assert pass_fail, \
+    assert actual_path < reference_path, \
       f"{filename} [{method}] path differs from reference and does not expand node in ascending order when all else is equal."
     
   # Case 3: Straight up wrong
