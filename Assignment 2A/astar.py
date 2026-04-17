@@ -1,14 +1,13 @@
 import heapq
-from input import Node
 from heuristics import euclidean_distance
 
-def astar(node_list: dict[int, Node], src: int, dest: list[int]):
+def astar(node_list: dict, src: int, dest: list[int]):
     '''
     A* search algorithm using euclidean distance as the heuristic h(n).
     Expands nodes by lowest f(n) = g(n) + h(n), where g(n) is the cost from
     the source to the current node and h(n) is the minimum euclidean distance
     to any destination. Ties are broken by ascending node number. Returns a
-    tuple of (goal, number_of_nodes_created, path).
+    tuple of (goal, number_of_nodes_visited, path).
     '''
     if node_list.get(src) is None or not (set(dest) & set(node_list)):
         raise ValueError("Source or destination node not in graph")
@@ -21,13 +20,13 @@ def astar(node_list: dict[int, Node], src: int, dest: list[int]):
 
     g_cost = {src: 0}
     predecessor = {src: None}
-    nodes_created = set()
-    nodes_created.add(src)
+    nodes_visited = 0
 
     frontier = [(h(src), src)]
 
     while frontier:
         f, current = heapq.heappop(frontier)
+        nodes_visited += 1
 
         if current in dest_set:
             path = []
@@ -35,7 +34,7 @@ def astar(node_list: dict[int, Node], src: int, dest: list[int]):
             while node is not None:
                 path.append(node)
                 node = predecessor[node]
-            return (current, len(nodes_created), list(reversed(path)))
+            return (current, nodes_visited, list(reversed(path)))
 
         if f > g_cost.get(current, float('inf')) + h(current) + 1e-9:
             continue
@@ -46,6 +45,5 @@ def astar(node_list: dict[int, Node], src: int, dest: list[int]):
                 g_cost[neighbour] = new_g
                 predecessor[neighbour] = current
                 heapq.heappush(frontier, (new_g + h(neighbour), neighbour))
-                nodes_created.add(neighbour)
 
-    return (None, len(nodes_created), [])
+    return (None, nodes_visited, [])
