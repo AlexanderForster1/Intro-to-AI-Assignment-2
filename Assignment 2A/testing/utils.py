@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import csv
 import sys
 import os
 import json
@@ -150,3 +151,18 @@ def export(node_list: dict[int, Node], origin: int, destinations: list[int]):
       f.write(f"{random.choice(list(node_list.keys()))}")
     else:
       f.write(f"{"; ".join(str(dest) for dest in destinations)}")
+
+def write_to_csv(row, filepath, headers):
+  '''
+  Write the given row to the CSV file of filepath
+  '''
+  file_exists = Path(filepath).exists()
+
+  with open(filepath, "a", newline="") as f:
+    writer = csv.writer(f)
+
+    # Write header only once
+    if not file_exists:
+      writer.writerow(headers)
+
+    writer.writerow(row)

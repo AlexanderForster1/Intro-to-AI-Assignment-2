@@ -1,4 +1,4 @@
-from utils import parse_output, createNxGraph, path_cost, methods
+from utils import parse_output, createNxGraph, path_cost, methods, write_to_csv
 from pathlib import Path
 from reference import reference_methods
 import glob
@@ -58,7 +58,22 @@ def test_complete(filepath, method):
     pytest.skip("Skipping due to lack of expected output.")
 
   result = methods[method](graph["node_list"], graph["origin"], graph["destinations"])
-  assert result == (output['goal'], output['number_of_nodes'], output['path']), f"{filename} [{method}] output does not match expected."
+  pass_fail = result == (output['goal'], output['number_of_nodes'], output['path'])
+
+  write_to_csv(row=[filename, method, 
+                    result[0], output['goal'], 
+                    result[1], output['number_of_nodes'], 
+                    result[2], output['path'],
+                    "Pass" if pass_fail else "Fail"],
+               filepath=Path(__file__).parent / "test_results" / "test_complete.csv",
+               headers=["filename", "method", 
+                        "actual_goal", "expected_goal", 
+                        "actual_num_of_nodes", "expected_num_of_nodes", 
+                        "actual_path", "expected_path",
+                        "result"])
+  
+  assert pass_fail, f"{filename} [{method}] output does not match expected."
+  
 
 # ------------------------- TEST 2 ------------------------- #
 
@@ -111,14 +126,27 @@ def test_path_match(filepath, method):
 
   # Case 1: Exact match
   if actual_path == reference_path:
+    pass_fail = True
     assert True
 
   # Case 2: Different paths but same cost: only applies to shortest paths algorithms
   elif actual_cost == reference_cost and method in shortest_paths:
-    assert actual_path < reference_path, \
+    pass_fail = actual_path < reference_path
+    assert pass_fail, \
       f"{filename} [{method}] path differs from reference and does not expand node in ascending order when all else is equal."
     
   # Case 3: Straight up wrong
   else:
+    pass_fail = False
     assert False, \
       f"{filename} [{method}] path does not match reference."
+    
+  write_to_csv(row=[filename, method, 
+                    actual_path, reference_path,
+                    actual_cost, reference_cost,
+                    "Pass" if pass_fail else "Fail"],
+               filepath=Path(__file__).parent / "test_results" / "test_path_match.csv",
+               headers=["filename", "method", 
+                        "actual_path", "expected_path",
+                        "actual_path_cost", "expected_path_cost",
+                        "result"])

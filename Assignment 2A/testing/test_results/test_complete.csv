@@ -1,0 +1,79 @@
+filename,method,actual_goal,expected_goal,actual_num_of_nodes,expected_num_of_nodes,actual_path,expected_path,result
+g01.txt,DFS,1,1,1,1,[1],[1],Pass
+g01.txt,BFS,1,1,1,1,[1],[1],Pass
+g01.txt,CUS1,1,1,1,1,[1],[1],Pass
+g01.txt,CUS2,1,1,1,1,[1],[1],Pass
+g02.txt,DFS,,,3,3,[],[],Pass
+g02.txt,BFS,,,3,3,[],[],Pass
+g02.txt,CUS1,,,4,4,[],[],Pass
+g02.txt,CUS2,,,3,3,[],[],Pass
+g03.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g05.txt,DFS,1,1,1,1,[1],[1],Pass
+g05.txt,BFS,1,1,1,1,[1],[1],Pass
+g05.txt,CUS1,1,1,1,1,[1],[1],Pass
+g05.txt,CUS2,1,1,1,1,[1],[1],Pass
+g06.txt,DFS,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,BFS,4,4,4,4,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,CUS2,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g07.txt,DFS,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,BFS,3,3,4,4,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,CUS2,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
+g01.txt,DFS,1,1,1,1,[1],[1],Pass
+g01.txt,BFS,1,1,1,1,[1],[1],Pass
+g01.txt,CUS1,1,1,1,1,[1],[1],Pass
+g01.txt,CUS2,1,1,1,1,[1],[1],Pass
+g02.txt,DFS,,,3,3,[],[],Pass
+g02.txt,BFS,,,3,3,[],[],Pass
+g02.txt,CUS1,,,4,4,[],[],Pass
+g02.txt,CUS2,,,3,3,[],[],Pass
+g03.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g05.txt,DFS,1,1,1,1,[1],[1],Pass
+g05.txt,BFS,1,1,1,1,[1],[1],Pass
+g05.txt,CUS1,1,1,1,1,[1],[1],Pass
+g05.txt,CUS2,1,1,1,1,[1],[1],Pass
+g06.txt,DFS,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,BFS,4,4,4,4,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,CUS2,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g07.txt,DFS,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,BFS,3,3,4,4,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,CUS2,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
+g01.txt,DFS,1,1,1,1,[1],[1],Pass
+g01.txt,BFS,1,1,1,1,[1],[1],Pass
+g01.txt,CUS1,1,1,1,1,[1],[1],Pass
+g01.txt,CUS2,1,1,1,1,[1],[1],Pass
+g02.txt,DFS,,,3,3,[],[],Pass
+g02.txt,BFS,,,3,3,[],[],Pass
+g02.txt,CUS1,,,4,4,[],[],Pass
+g02.txt,CUS2,,,3,3,[],[],Pass
+g03.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g03.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,DFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,BFS,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS1,2,2,1,1,"[1, 2]","[1, 2]",Pass
+g04.txt,CUS2,2,2,2,2,"[1, 2]","[1, 2]",Pass
+g05.txt,DFS,1,1,1,1,[1],[1],Pass
+g05.txt,BFS,1,1,1,1,[1],[1],Pass
+g05.txt,CUS1,1,1,1,1,[1],[1],Pass
+g05.txt,CUS2,1,1,1,1,[1],[1],Pass
+g06.txt,DFS,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,BFS,4,4,4,4,"[1, 2, 4]","[1, 2, 4]",Pass
+g06.txt,CUS2,4,4,3,3,"[1, 2, 4]","[1, 2, 4]",Pass
+g07.txt,DFS,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,BFS,3,3,4,4,"[1, 2, 3]","[1, 2, 3]",Pass
+g07.txt,CUS2,3,3,3,3,"[1, 2, 3]","[1, 2, 3]",Pass
