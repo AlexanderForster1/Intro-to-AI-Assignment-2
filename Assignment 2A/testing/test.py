@@ -90,12 +90,20 @@ def test_valid_path(filepath, method):
 
   node_list = graph['node_list']
   path      = result[2]
+  pass_fail = True
   for i in range(len(path)-1):
     current = path[i]
     next    = path[i+1]
     if (next not in (e[0] for e in node_list[current].edges)):
-      assert False, f"[{method}] does not return a valid path in {filename}."
-  assert True
+      pass_fail = False
+      break
+  assert pass_fail, f"[{method}] does not return a valid path in {filename}."
+
+  write_to_csv(row=[filename, method,
+                    path, "Pass" if pass_fail else "Fail"],
+               filepath=Path(__file__).parent / "test_results" / "test_valid_path.csv",
+               headers=["filename", "method",
+                        "actual_path", "result"])
 
 # ------------------------- TEST 3 ------------------------- #
 
