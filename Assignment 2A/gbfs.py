@@ -1,7 +1,7 @@
-import heuristics
 import heapq
+from heuristics import heuristics
 
-def gbfs(node_list, origin, destination):
+def gbfs(node_list, origin, destination, heuristic=heuristics["manhattan"]):
     Node_heuristic = []
     heapq.heappush(Node_heuristic, (0, origin))
     Node_count = 0
@@ -24,7 +24,7 @@ def gbfs(node_list, origin, destination):
             return path[-1], Node_count, path
         for neighbor, cost in node_list[current_node].edges:
             if neighbor not in visited and neighbor not in parent:
-                heuristic_costs = [heuristics.manhattan_distance(node_list[neighbor], node_list[d]) for d in destination]
+                heuristic_costs = [heuristic(node_list[neighbor], node_list[d]) for d in destination]
                 heuristic_cost  = min(heuristic_costs) 
                 heapq.heappush(Node_heuristic, (heuristic_cost, neighbor))
                 parent[neighbor] = current_node

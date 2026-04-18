@@ -1,5 +1,5 @@
 from input import Node
-from heuristics import manhattan_distance
+from heuristics import heuristics
 import math
 import heapq
 import sys
@@ -7,8 +7,8 @@ import sys
 # Increase recursion depth limit
 sys.setrecursionlimit(10**5)
 
-# Custom search strategy 2: Recursive Best-first Search using Manhattan distance heuristic
-def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
+# Custom search strategy 2: Recursive Best-first Search
+def cus2(node_list: dict[int, Node], src: int, dest: list[int], heuristic=heuristics["manhattan"]):
   '''
   Searches the graph using recursive best first search (RBFS).
   Returns a tuple of the goal node number, the number of nodes created
@@ -18,17 +18,17 @@ def cus2(node_list: dict[int, Node], src: int, dest: list[int]):
   if node_list.get(src) is None or not(set(dest) & set(node_list)):
     raise ValueError("Source or destination node not in graph")
   
-  h0 = min(manhattan_distance(node_list[src], node_list[d]) for d in dest)
+  h0 = min(heuristic(node_list[src], node_list[d]) for d in dest)
   src_node = (src, h0)  # (node number, f value)
   visited = {n: False for n in node_list}
 
   # (Goal, number of nodes, path)
-  path, _ = _rbfs(node_list, src_node, dest, math.inf, 0, [src], visited)
+  path, _ = _rbfs(node_list, src_node, dest, math.inf, 0, [src], visited, heuristic)
   goal = path[-1] if path else None
   return (goal, sum(visited.values()), path)
 
 # node = (node number, node's f value)
-def _rbfs(node_list, node, dest, f_limit, node_g, path, visited):
+def _rbfs(node_list, node, dest, f_limit, node_g, path, visited, heuristic):
   '''
   Performs recursive RBFS. Returns an empty array or a one-item array
   containing the destination node and its f-value.
@@ -51,7 +51,7 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, visited):
 
     g[neighbour] = node_g + edge[1]  # Cost from src node to successor node
 
-    h = min(manhattan_distance(node_list[neighbour], node_list[d]) for d in dest)
+    h = min(heuristic(node_list[neighbour], node_list[d]) for d in dest)
     # As backtracking only happens if the current becomes worse than the alternative
     f = max(g[neighbour] + h, node_f)
     heapq.heappush(pq, (f, neighbour))  # (node's f value, node number)
@@ -77,8 +77,8 @@ def _rbfs(node_list, node, dest, f_limit, node_g, path, visited):
                            new_limit, 
                            g[best[1]], 
                            path + [best[1]],
-                           visited
-                           )
+                           visited,
+                           heuristic)
 
     # If destination node found, return result
     # else explore the next best successor

@@ -12,3 +12,9 @@ def chebyshev_distance(node1, node2):
     x1, y1 = node1.coordinates
     x2, y2 = node2.coordinates
     return max(abs(x1 - x2), abs(y1 - y2))
+
+heuristics = {
+    "manhattan": manhattan_distance,
+    "euclidean": euclidean_distance,
+    "chebyshev": chebyshev_distance,
+}

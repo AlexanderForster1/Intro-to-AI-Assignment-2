@@ -1,7 +1,7 @@
 import heapq
-from heuristics import euclidean_distance
+from heuristics import heuristics
 
-def astar(node_list: dict, src: int, dest: list[int]):
+def astar(node_list: dict, src: int, dest: list[int], heuristic=heuristics["euclidean"]):
     '''
     A* search algorithm using euclidean distance as the heuristic h(n).
     Expands nodes by lowest f(n) = g(n) + h(n), where g(n) is the cost from
@@ -16,7 +16,7 @@ def astar(node_list: dict, src: int, dest: list[int]):
     valid_dest = [d for d in dest if d in node_list]
 
     def h(node_number):
-        return min(euclidean_distance(node_list[node_number], node_list[d]) for d in valid_dest)
+        return min(heuristic(node_list[node_number], node_list[d]) for d in valid_dest)
 
     g_cost = {src: 0}
     predecessor = {src: None}

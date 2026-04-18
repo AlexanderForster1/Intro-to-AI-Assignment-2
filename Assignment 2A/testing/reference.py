@@ -1,4 +1,3 @@
-import math
 import networkx as nx
 from utils import path_from_nx_edges, manhattan
 
