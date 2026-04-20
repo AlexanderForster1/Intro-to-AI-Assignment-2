@@ -2,7 +2,9 @@ import networkx as nx
 import sys
 import os
 import csv
+import random
 from pathlib import Path
+from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from input import Node
@@ -31,6 +33,13 @@ def createNxGraph(node_list: dict[int, Node]) -> nx.Graph:
 
   return g
 
+def manhattan(pos1, pos2):
+  '''
+  Returns the Manhattan distance given the two coordinates.
+  '''
+  x1, y1 = pos1
+  x2, y2 = pos2
+  return abs(x1-x2) + abs(y1-y2)
 
 def path_cost(node_list: list[int, Node], path: list[int]):
   '''
@@ -69,6 +78,29 @@ def shortest_path(G: nx.Graph, source: int, destinations: list[int], node_list=N
           closest_path = paths[d]
 
   return closest_path
+
+def export(node_list: dict[int, Node], origin: int, destinations: list[int]):
+  '''
+  Exports the given node list, origin, and destinations into an input text file.
+  '''
+  if not node_list:
+    return
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  with open(f'test_cases/g{timestamp}.txt', 'w') as f:
+    f.write("Nodes:\n")
+    for key, node in node_list.items():
+      f.write(f"{key}: ({node.coordinates[0]},{node.coordinates[1]})\n")
+    f.write("Edges:\n")
+    for key, node in node_list.items():
+      for edge in node.edges: 
+        f.write(f"({key},{edge[0]}): {edge[1]}\n")
+    f.write("Origin:\n")
+    f.write(f"{origin if origin is not None else random.choice(list(node_list.keys()))}\n")
+    f.write("Destinations:\n")
+    if not destinations:
+      f.write(f"{random.choice(list(node_list.keys()))}")
+    else:
+      f.write(f"{"; ".join(str(dest) for dest in destinations)}")
 
 def write_to_csv(row, filepath, headers):
   '''
