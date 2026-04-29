@@ -27,5 +27,9 @@ df_model["day_sin"] = np.sin(2 * np.pi * df_model["Day"] / 7)
 df_model["day_cos"] = np.cos(2 * np.pi * df_model["Day"] / 7)
 
 df_model["is_weekend"] = df_model["Day"].isin([5, 6]).astype(int)
-df_model = df_model[["SCATS Number", "time_sin", "time_cos", "day_sin", "day_cos", "is_weekend", "traffic_volume"]]
+df_model["SCATS_id"] = df_model["SCATS Number"].astype('category').cat.codes
+df_id = df_model[["SCATS Number", "SCATS_id"]].copy()
+df_id = df_id.drop_duplicates(subset=["SCATS Number"])
+df_id.to_csv('id_mapping.csv', index=False)
+df_model = df_model[["SCATS_id", "time_sin", "time_cos", "day_sin", "day_cos", "is_weekend", "traffic_volume"]]
 df_model.to_csv('model_data.csv', index=False)
