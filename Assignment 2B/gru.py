@@ -27,21 +27,30 @@ would incorporate TimeSeriesSplit but current model already encodes time structu
 
 PARENT_DIR = Path(__file__).resolve().parent
 TEST_SIZE  = 0.2
-TIME_STEP  = 96  # 24 hours
+features = [
+  "time_sin",
+  "time_cos",
+  "day_sin",
+  "day_cos",
+  "is_weekend",
+  "lat_scaled",
+  "lon_scaled",
+  "traffic_volume"
+]
 
-def create_dataset(data, time_step=1):
+def create_dataset(df: pd.DataFrame, time_step: int):
   '''Create sliding windows of time_step length'''
   X, y = [], []
-  print(len(data))
-  for i in range(len(data) - time_step):
-    X.append(data[i:(i + time_step), :])
-    y.append(data[i + time_step, -1])  # Last feature = traffic flow
+  input  = df[features].values
+  output = df["traffic_volume"].values
+  for i in range(len(df.values) - time_step):
+    # Exclude previous traffic flow from input
+    X.append(input[i:(i + time_step)])
+    y.append(output[i + time_step])
   return np.array(X), np.array(y)
 
-def load_data():
+def load_data(df: pd.DataFrame, time_step=1):
   '''Load, scale, and split data'''
-  df = pd.read_csv(PARENT_DIR / "data" / "model_data.csv")
-
   train_size = int(len(df) * (1 - TEST_SIZE))
   train_df = df[:train_size].copy()
   test_df  = df[train_size:].copy()
@@ -55,8 +64,9 @@ def load_data():
 
   # X.shape = (samples, time_steps, features)
   # y.shape = (samples, )
-  X_train, y_train = create_dataset(train_df.values, TIME_STEP)
-  X_test, y_test   = create_dataset(test_df.values, TIME_STEP)
+  X_train, y_train = create_dataset(train_df, time_step)
+  X_test, y_test   = create_dataset(test_df, time_step)
+  print(y_train[0])
 
   return X_train, y_train, X_test, y_test, scaler
 
@@ -110,6 +120,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
   plt.close()
 
   # Save loss curve over time
+  plt.clf()
   plt.figure()
   plt.plot(history.history["loss"], label="train")
   plt.plot(history.history["val_loss"], label="val")
@@ -124,27 +135,27 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
     "run_id"        : run_id,
     **config,
     "rmse"          : rmse,
-    "mae"           :  mae,
+    "mae"           : mae,
     "final_val_loss": history.history["val_loss"][-1]
   }
 
 @dataclass
 class Config:
   gru_layers: List[int]
+  time_step: int = 96
+  loss: str = "mean_squared_error"
   lr: float = 0.001
   batch_size: int = 32
   epochs: int = 20
   dropout: float= 0.2
 
 def main():
-  X_train, y_train, X_test, y_test, scaler = load_data()
+  time_step = 96
+  df = pd.read_csv(PARENT_DIR / "data" / "model_data.csv")
+  X_train, y_train, X_test, y_test, scaler = load_data(df, time_step=time_step)
 
   configs = [
-    Config([32], dropout=0.0),
-    Config([32]),
-    Config([32], lr=0.0005),
-    Config([32, 32]),
-    Config([64, 32])
+    Config([32], dropout=0.1, time_step=96, loss='mean_squared_error'),
   ]
 
   results = []
@@ -155,7 +166,7 @@ def main():
     results.append(result)
   
   df = pd.DataFrame(results)
-  df.to_csv(PARENT_DIR / "results.csv", index=False)
+  df.to_csv(PARENT_DIR / "runs" / "results.csv", mode="a", header=False, index=False)
 
 if __name__ == '__main__':
   os.system('cls')
