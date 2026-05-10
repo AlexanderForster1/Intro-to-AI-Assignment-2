@@ -167,13 +167,7 @@ df[features] = df[features].astype(np.float32)
 X_train, y_train, X_test, y_test, scaler = load_data(df, features, time_step=time_step)
 
 configs = [
-  Config([16], dropout=0.2, time_step=24, epochs=20, loss='mean_squared_error'),
   Config([32], dropout=0.1, time_step=24, epochs=20, loss='mean_squared_error'),
-  Config([32], dropout=0.2, time_step=48, epochs=20, loss='mean_squared_error'),
-  Config([32], dropout=0.2, time_step=24, epochs=30, loss='mean_squared_error'),
-  Config([32, 16], dropout=0.2, time_step=24, epochs=20, loss='mean_squared_error'),
-  Config([16, 16], dropout=0.2, time_step=24, epochs=20, loss='mean_squared_error'),
-  Config([32, 16, 8], dropout=0.2, time_step=24, epochs=20, loss='mean_squared_error'),
 ]
 
 results = []
