@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import joblib
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 from sklearn.model_selection import TimeSeriesSplit
 from tensorflow.keras.models import Sequential
@@ -24,7 +24,7 @@ class Config:
   epochs: int = 20
   dropout: float= 0.2
 
-def create_dataset(df: pd.DataFrame, time_step: int):
+def create_dataset(df: pd.DataFrame, features: list[int], time_step: int):
   '''Create sliding windows of time_step length'''
   X, y = [], []
   input  = df[features].values
@@ -40,7 +40,7 @@ def load_data(df: pd.DataFrame, features: list[int], time_step=1, test_size=0.2)
   train_df = df[:train_size].copy()
   test_df  = df[train_size:].copy()
 
-  scaler = StandardScaler()
+  scaler = MinMaxScaler()
   scaler.fit(train_df[["traffic_volume"]])
   joblib.dump(scaler, Path(__file__).parent.parent / "traffic_volume_scaler.pkl")
 
@@ -50,8 +50,8 @@ def load_data(df: pd.DataFrame, features: list[int], time_step=1, test_size=0.2)
 
   # X.shape = (samples, time_steps, features)
   # y.shape = (samples, )
-  X_train, y_train = create_dataset(train_df, time_step)
-  X_test, y_test   = create_dataset(test_df, time_step)
+  X_train, y_train = create_dataset(train_df, features, time_step)
+  X_test, y_test   = create_dataset(test_df, features, time_step)
 
   return X_train, y_train, X_test, y_test, scaler
 
@@ -70,7 +70,7 @@ def build_model(config: Config):
                   dropout=config["dropout"]
     ))
   
-  model.add(Dense(units=1))
+  model.add(Dense(units=1, activation='relu'))
 
   model.compile(optimizer=Adam(learning_rate=config["lr"]),
                 loss=config['loss'])
@@ -170,7 +170,7 @@ df[features] = df[features].astype(np.float32)
 X_train, y_train, X_test, y_test, scaler = load_data(df, features, time_step=time_step)
 
 configs = [
-  Config([32], dropout=0.1, time_step=time_step, epochs=50, loss='mean_squared_error'),
+  Config([32, 16], dropout=0.1, time_step=time_step, epochs=50, loss='mean_squared_error'),
 ]
 
 results = []
