@@ -4,7 +4,7 @@ import os
 import joblib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 from sklearn.model_selection import TimeSeriesSplit
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GRU, Dense
@@ -94,6 +94,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
   # Metrics: Root Mean Squared Error and Mean Absolute Error
   rmse = np.sqrt(mean_squared_error(y_test_inversed, predictions_inversed))
   mae  = mean_absolute_error(y_test_inversed, predictions_inversed)
+  mape = mean_absolute_percentage_error(y_test_inversed, predictions_inversed)
 
   # Save plots
   # Save prediction plot
@@ -138,6 +139,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
     **config,
     "rmse"          : rmse,
     "mae"           : mae,
+    "mape"          : mape,
     "final_val_loss": history.history["val_loss"][-1]
   }
 
@@ -179,4 +181,4 @@ for config in configs:
   results.append(result)
 
 df = pd.DataFrame(results)
-df.to_csv("gru_results.csv", mode="a", header=False, index=False)
+df.to_csv(Path(__file__).parent / "gru_results.csv", mode="a", header=False, index=False)
