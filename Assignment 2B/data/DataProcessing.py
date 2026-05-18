@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import joblib
 from sklearn.preprocessing import StandardScaler
+from pathlib import Path
 
 df = pd.read_csv('Scats Data October 2006.csv', dtype={"SCATS Number": str})
 
@@ -14,6 +16,7 @@ df_map.to_csv("map_data.csv", index=False)
 
 coord_scaler = StandardScaler()
 df[["lat_scaled", "lon_scaled"]] = coord_scaler.fit_transform(df[["NB_LATITUDE", "NB_LONGITUDE"]])
+joblib.dump(coord_scaler, Path(__file__).parent / "coord_scaler.pkl")
 df_temp = df.drop(columns=["Location", "NB_LATITUDE", "NB_LONGITUDE", "CD_MELWAY", "HF VicRoads Internal", "VR Internal Stat", "VR Internal Loc", "NB_TYPE_SURVEY"])
 time_cols = [col for col in df_temp.columns if ":" in col]
 df_model = df_temp.melt(

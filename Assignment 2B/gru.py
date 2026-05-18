@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import joblib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -16,7 +17,7 @@ from typing import List
 @dataclass
 class Config:
   gru_layers: List[int]
-  time_step: int = 96
+  time_step: int = 24
   loss: str = "mean_squared_error"
   lr: float = 0.001
   batch_size: int = 32
@@ -41,6 +42,7 @@ def load_data(df: pd.DataFrame, features: list[int], time_step=1, test_size=0.2)
 
   scaler = StandardScaler()
   scaler.fit(train_df[["traffic_volume"]])
+  joblib.dump(scaler, Path(__file__).parent / "runs" / "traffic_volume_scaler.pkl")
 
   # Z-score standardisation on traffic flow
   train_df["traffic_volume"] = scaler.transform(train_df[["traffic_volume"]])
@@ -161,6 +163,7 @@ features = [
   "lat_scaled",
   "lon_scaled"
 ] + [col for col in df.columns if col.startswith("SCATS_")]
+joblib.dump(features, Path(__file__).parent / "runs" / "feature_columns.pkl")
 
 df[features] = df[features].astype(np.float32)
 
