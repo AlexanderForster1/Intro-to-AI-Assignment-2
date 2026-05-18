@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import joblib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -16,7 +17,7 @@ from typing import List
 @dataclass
 class Config:
   gru_layers: List[int]
-  time_step: int = 96
+  time_step: int = 24
   loss: str = "mean_squared_error"
   lr: float = 0.001
   batch_size: int = 32
@@ -41,6 +42,7 @@ def load_data(df: pd.DataFrame, features: list[int], time_step=1, test_size=0.2)
 
   scaler = StandardScaler()
   scaler.fit(train_df[["traffic_volume"]])
+  joblib.dump(scaler, Path(__file__).parent / "runs" / "traffic_volume_scaler.pkl")
 
   # Z-score standardisation on traffic flow
   train_df["traffic_volume"] = scaler.transform(train_df[["traffic_volume"]])
@@ -123,7 +125,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
   ax.plot(epochs, history.history["val_loss"], label="val")
   ax.set_title("Loss Curve")
   ax.set_xlabel("Epoch")
-  ax.set_xticks(np.arange(1, config["epochs"]+1, 1))
+  ax.set_xticks(np.arange(1, config["epochs"]+1, 5))
   ax.set_ylabel("Loss")
   ax.legend()
   fig.savefig(run_dir / f"loss_{run_id}.png")
@@ -144,7 +146,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
 
 os.system('cls')
 parent_dir = Path(__file__).resolve().parent
-time_step = 96
+time_step = 24
 
 df = pd.read_csv(parent_dir / "data" / "model_data.csv", dtype={"SCATS Number": str})
 df.columns = df.columns.str.strip()
@@ -161,13 +163,14 @@ features = [
   "lat_scaled",
   "lon_scaled"
 ] + [col for col in df.columns if col.startswith("SCATS_")]
+joblib.dump(features, Path(__file__).parent / "runs" / "feature_columns.pkl")
 
 df[features] = df[features].astype(np.float32)
 
 X_train, y_train, X_test, y_test, scaler = load_data(df, features, time_step=time_step)
 
 configs = [
-  Config([32], dropout=0.1, time_step=24, epochs=20, loss='mean_squared_error'),
+  Config([32], dropout=0.1, time_step=time_step, epochs=50, loss='mean_squared_error'),
 ]
 
 results = []
