@@ -42,7 +42,7 @@ def load_data(df: pd.DataFrame, features: list[int], time_step=1, test_size=0.2)
 
   scaler = StandardScaler()
   scaler.fit(train_df[["traffic_volume"]])
-  joblib.dump(scaler, Path(__file__).parent / "runs" / "traffic_volume_scaler.pkl")
+  joblib.dump(scaler, Path(__file__).parent.parent / "traffic_volume_scaler.pkl")
 
   # Z-score standardisation on traffic flow
   train_df["traffic_volume"] = scaler.transform(train_df[["traffic_volume"]])
@@ -79,7 +79,6 @@ def build_model(config: Config):
 
 def run(config, X_train, y_train, X_test, y_test, scaler):
   run_id  = datetime.now().strftime("%Y%m%d%H%M%S")
-  run_dir = parent_dir / "runs"
 
   model   = build_model(config)
   history = model.fit(X_train, y_train,
@@ -115,7 +114,7 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
   ax.set_ylabel("Traffic Volume")
   ax.legend()
 
-  fig.savefig(run_dir / f"preds_{run_id}.png")
+  fig.savefig(Path(__file__).parent / f"preds_{run_id}.png")
   plt.close(fig)
 
   # Save loss curve over time
@@ -128,11 +127,11 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
   ax.set_xticks(np.arange(1, config["epochs"]+1, 5))
   ax.set_ylabel("Loss")
   ax.legend()
-  fig.savefig(run_dir / f"loss_{run_id}.png")
+  fig.savefig(Path(__file__).parent / f"loss_{run_id}.png")
   plt.close(fig)
 
   # Save model
-  model.save(run_dir / f"model_{run_id}.keras")
+  model.save(Path(__file__).parent / f"model_{run_id}.keras")
 
   return {
     "run_id"        : run_id,
@@ -145,10 +144,9 @@ def run(config, X_train, y_train, X_test, y_test, scaler):
 # ------------------------------ #
 
 os.system('cls')
-parent_dir = Path(__file__).resolve().parent
 time_step = 24
 
-df = pd.read_csv(parent_dir / "data" / "model_data.csv", dtype={"SCATS Number": str})
+df = pd.read_csv(Path(__file__).parent.parent.parent / "data" / "model_data.csv", dtype={"SCATS Number": str})
 df.columns = df.columns.str.strip()
 df["SCATS Number"] = df["SCATS Number"].str.zfill(4)
 df = df.sort_values(["Date", "SCATS Number", "hour"]).reset_index(drop=True)
@@ -163,7 +161,7 @@ features = [
   "lat_scaled",
   "lon_scaled"
 ] + [col for col in df.columns if col.startswith("SCATS_")]
-joblib.dump(features, Path(__file__).parent / "runs" / "feature_columns.pkl")
+joblib.dump(features, Path(__file__).parent.parent / "feature_columns.pkl")
 
 df[features] = df[features].astype(np.float32)
 
@@ -181,4 +179,4 @@ for config in configs:
   results.append(result)
 
 df = pd.DataFrame(results)
-df.to_csv(parent_dir / "runs" / "results.csv", mode="a", header=False, index=False)
+df.to_csv("gru_results.csv", mode="a", header=False, index=False)

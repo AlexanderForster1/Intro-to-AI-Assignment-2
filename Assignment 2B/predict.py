@@ -7,8 +7,8 @@ from graph_builder import _load_sites
 from pathlib import Path
 
 coord_scaler = joblib.load(Path(__file__).parent / "data" / "coord_scaler.pkl")
-traffic_volume_scaler = joblib.load(Path(__file__).parent / "runs" / "traffic_volume_scaler.pkl")
-feature_columns = joblib.load(Path(__file__).parent / "runs" / "feature_columns.pkl")
+traffic_volume_scaler = joblib.load(Path(__file__).parent / "models" / "traffic_volume_scaler.pkl")
+feature_columns = joblib.load(Path(__file__).parent / "models" / "feature_columns.pkl")
 
 def predict(
     time: datetime, 
@@ -87,7 +87,7 @@ def _scats_one_hot(scats_number):
   return vec
 
 # Test run
-model = load_model(Path(__file__).parent / "runs" / "model_20260518162915.keras")
+model = load_model(Path(__file__).parent / "models" / "gru" / "gru_traffic_model.keras")
 preds = predict(datetime.now(), model)
 for key, value in preds.items():
   print(f"{key}: {value}")
