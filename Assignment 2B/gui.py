@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 import threading
 import json
 import os
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from boroondara_search import find_routes, build_travel_time_graph
+from predict import predict
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
@@ -189,7 +191,8 @@ class App(tk.Tk):
 
     def _run_search(self, origin: int, dest: int, algorithm: str):
         try:
-            routes = find_routes(origin, dest, algorithm=algorithm)
+            flow_dict = predict(datetime.now(), model_name="rnn")
+            routes = find_routes(origin, dest, flow_dict=flow_dict, algorithm=algorithm)
             self.after(0, self._display_results, routes, algorithm)
         except Exception as e:
             self.after(0, self._show_error, str(e))

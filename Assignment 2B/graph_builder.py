@@ -160,7 +160,7 @@ def _build_manual_edges(
     manual_pairs: list[tuple[int, int]] = [
         # Western Burwood Rd corridor
         (4262, 4263),   
-        (4263, 4264),   
+        (4263, 4264), 
         # Outer-west sites connecting to network 
         (4262, 4812),  
         (4812, 4263),   
