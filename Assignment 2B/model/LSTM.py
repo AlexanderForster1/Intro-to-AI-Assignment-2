@@ -31,7 +31,6 @@ feature_cols = ['hour_sin', 'hour_cos','day_sin', 'day_cos',
 
 df_model = df_model.sort_values(["SCATS Number", "Date", "hour"])
 
-train_cutoff = '2006-10-25'
 train_rows = df_model[df_model['Date'] < '2006-10-18']
 
 scaler_y = MinMaxScaler(feature_range=(0, 1))
@@ -54,9 +53,9 @@ X = np.array(X, dtype=np.float32)
 y = np.array(y, dtype=np.float32)
 dates = np.array(dates)
 
-train_mask = dates < '2006-10-18'                                # Oct 01 - Oct 17
+train_mask = dates < '2006-10-18'                                     # Oct 01 - Oct 17
 validate_mask   = (dates >= '2006-10-18') & (dates < '2006-10-25')    # Oct 18 - Oct 24
-test_mask  = dates >= '2006-10-25'                               # Oct 25 - Oct 31
+test_mask  = dates >= '2006-10-25'                                    # Oct 25 - Oct 31
 
 X_train, y_train = X[train_mask], y[train_mask]
 X_val, y_val     = X[validate_mask], y[validate_mask]
