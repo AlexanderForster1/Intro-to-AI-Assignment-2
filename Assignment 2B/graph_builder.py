@@ -115,26 +115,34 @@ def _build_same_road_edges(
             )
             _add_edge(node_list, a, b, dist)
 
+CROSS_ROAD_DENY = {
+    (3180, 4063),
+    (4063, 3180),
+}
+
 def _build_cross_road_edges(
     sites: dict[int, dict],
     node_list: dict[int, Node],
     max_dist_km: float = 2.5,) -> None:
-    """connect sites that meet at a common interesection via t heir cross-road."""
+    """Connect sites that meet at a common intersection via their cross-road."""
 
     scats_list = list(sites.keys())
- 
+
     for i, a in enumerate(scats_list):
         for b in scats_list[i + 1:]:
+            if (a, b) in CROSS_ROAD_DENY or (b, a) in CROSS_ROAD_DENY:
+                continue
+
             road_a = sites[a]['road']
             road_b = sites[b]['road']
             cross_a = sites[a]['cross']
             cross_b = sites[b]['cross']
- 
+
             connected = (
-                road_a == cross_b   # A's road is B's cross road
-                or road_b == cross_a  # B's road is A's cross road
+                road_a == cross_b
+                or road_b == cross_a
             )
- 
+
             if connected:
                 dist = _haversine_km(
                     sites[a]['lat'], sites[a]['lon'],
@@ -158,6 +166,8 @@ def _build_manual_edges(
     haversine distances, all are under 2.5 km.
     """
     manual_pairs: list[tuple[int, int]] = [
+        # GLENFERRIE_RD to AUBURN_RD along BURWOOD_RD
+        (4264, 4266),
         # Western Burwood Rd corridor
         (4262, 4263),   
         (4263, 4264), 

@@ -1,133 +1,129 @@
-import numpy as np
+import os
 import joblib
+import numpy as np
 import pandas as pd
-from tensorflow.keras.models import load_model
 from datetime import datetime, timedelta
-from graph_builder import _load_sites
 from pathlib import Path
+from graph_builder import _load_sites
 
-coord_scaler = joblib.load(Path(__file__).parent / "data" / "coord_scaler.pkl")
-feature_columns = joblib.load(Path(__file__).parent / "models" / "feature_columns.pkl")
-models = {
-  "lstm": {
-    "scaler": None,
-    "model":  None,
-  },
-  "gru":  {
-    "scaler": joblib.load(Path(__file__).parent / "models" / "gru_traffic_volume_scaler.pkl"),
-    "model" : load_model(Path(__file__).parent / "models" / "gru" / "gru_traffic_model.keras")
-  },
-  "rnn": {
-    "scaler": None,
-    "model" : load_model(Path(__file__).parent / "models" / "rnn" / "rnn_traffic_model.keras")
-  }
-}
+_BASE = Path(__file__).parent
+_DATA = _BASE / "data"
+_MODELS = _BASE / "models"
 
-def predict(
-    time: datetime, 
-    model_name="rnn", 
-    time_step=24) -> dict[int, float]:
-  '''Predicts the hourly traffic flow at the given time across all SCATS sites in Boroondara, returning a dictionary mapping each SCATS site number to its predicted traffic flow'''
+_coord_scaler    = joblib.load(_DATA / "coord_scaler.pkl")
+_feature_columns = joblib.load(_MODELS / "feature_columns.pkl")
 
-  sites = _load_sites(Path(__file__).resolve().parent / "data" / "map_data.csv")
-  site_ids = list(sites.keys())
+def _load_models() -> dict:
+    """load available trained models. missing model files are skipped"""
+    from tensorflow.keras.models import load_model
 
-  model = models.get(model_name).get("model")
-  if model is None:
-    return {sid: 0.0 for sid in site_ids}
+    registry = {}
 
-  X = []
+    gru_path = _MODELS / "gru" / "gru_traffic_model.keras"
+    gru_scaler_path = _MODELS / "gru_traffic_volume_scaler.pkl"
+    if gru_path.exists():
+        registry["gru"] = {
+            "model" : load_model(gru_path),
+            "scaler": joblib.load(gru_scaler_path) if gru_scaler_path.exists() else None,
+        }
 
-  for scats_number, site_info in sites.items():
-    scats_number = f"{scats_number:04d}"
-    sequence = []
-    # Create history of 24 current and previous timesteps
-    for i in range(time_step-1, -1, -1):
-      t = time - timedelta(hours=i)
+    rnn_path = _MODELS / "rnn" / "rnn_traffic_model.keras"
+    if rnn_path.exists():
+        registry["rnn"] = {
+            "model" : load_model(rnn_path),
+            "scaler": None,
+        }
 
-      features = _build_features(
-        time=t,
-        scats_number=scats_number,
-        sites=sites,
-      )
+    return registry
 
-      sequence.append(features)
-    X.append(sequence)
-    
-  X = np.array(X, dtype=np.float32)
+_models = _load_models()
 
-  # Shape check
-  assert X.shape[-1] == model.input_shape[-1], \
-    f"Feature mismatch: {X.shape[-1]} vs {model.input_shape[-1]}"
-  
-  preds = model.predict(X, verbose=0)
 
-  traffic_volume_scaler = models[model_name]["scaler"]
-  if traffic_volume_scaler is not None:
-    preds = traffic_volume_scaler.inverse_transform(preds.reshape(-1, 1))
+def predict(time: datetime, model_name: str = "gru", time_step: int = 24) -> dict[int, float]:
+    """
+    predict hourly traffic flow for all SCATS sites at the given datetime
+    returns a dict mapping each SCATS site number to its predicted flow (vehicles/hour)
+    falls back to 0.0 for all sites if the requested model is unavailable
+    """
+    sites   = _load_sites(_DATA / "map_data.csv")
+    site_ids = list(sites.keys())
 
-  flow_dict = {}
-  for i in range(len(site_ids)):
-    if model_name == "gru":
-      pred = float(preds[i][0])
-    elif model_name == "rnn":
-      # Shape of final prediction: (24, 1)
-      # Extract the final scalar value corresponding to the current timestamp
-      pred = float(preds[i][-1][0])
-    flow_dict[site_ids[i]] = pred
+    entry = _models.get(model_name)
+    if entry is None or entry["model"] is None:
+        return {sid: 0.0 for sid in site_ids}
 
-  return flow_dict
+    model = entry["model"]
 
-def _build_features(
-    time: datetime, 
-    scats_number: int, 
-    sites: dict[int, dict]) -> np.ndarray:
+    X = []
+    for scats, info in sites.items():
+        sequence = []
+        for i in range(time_step - 1, -1, -1):
+            t = time - timedelta(hours=i)
+            sequence.append(_build_features(t, scats, sites))
+        X.append(sequence)
 
-  hour = time.hour
-  day = time.weekday()
+    X = np.array(X, dtype=np.float32)
 
-  site_info = sites[int(scats_number)]
+    assert X.shape[-1] == model.input_shape[-1], (
+        f"Feature mismatch: got {X.shape[-1]}, model expects {model.input_shape[-1]}"
+    )
 
-  return np.array([
-    np.sin(2 * np.pi * hour / 24),  # hour_sin
-    np.cos(2 * np.pi * hour / 24),  # hour_cos
-    np.sin(2 * np.pi * day / 7),    # day_sin
-    np.cos(2 * np.pi * day / 7),    # day_cos
-    int(day >= 5),
-    *coord_scaler.transform(
-      pd.DataFrame([[site_info["lat"], site_info["lon"]]], 
-                   columns=["NB_LATITUDE", "NB_LONGITUDE"])
-    )[0],
-    *_scats_one_hot(scats_number)
-  ], dtype=np.float32)
+    preds = model.predict(X, verbose=0)
 
-def _scats_one_hot(scats_number):
-  scats_columns = [col for col in feature_columns if col.startswith("SCATS_")]
+    scaler = entry["scaler"]
+    if scaler is not None:
+        preds = scaler.inverse_transform(preds.reshape(-1, 1))
 
-  sites = _load_sites(Path(__file__).resolve().parent / "data" / "map_data.csv")
-  runtime_scats = sorted([f"{sid:04d}" for sid in sites.keys()])
-  runtime_cols = [f"SCATS_{sid}" for sid in runtime_scats]
+    flow_dict = {}
+    for i, sid in enumerate(site_ids):
+        if model_name == "gru":
+            flow_dict[sid] = round(preds[i][0])
+        elif model_name == "rnn":
+            flow_dict[sid] = round(preds[i][-1][0])
+        else:
+            flow_dict[sid] = round(preds[i].flat[0])
 
-  assert scats_columns == runtime_cols, (
-    "SCATS feature mismatch between training and inference\n"
-    f"Training: {scats_columns}\n"
-    f"Inference: {runtime_cols}"
-  )
-  vec = np.zeros(len(scats_columns), dtype=np.float32)
+    return flow_dict
 
-  col_name = f"SCATS_{scats_number}"
 
-  if col_name not in scats_columns:
-    raise ValueError(f"Unknown SCATS: {scats_number}")
-  idx = scats_columns.index(col_name)
-  vec[idx] = 1.0
-  return vec
+def _build_features(time: datetime, scats: int, sites: dict) -> np.ndarray:
+    """build the feature vector for one site at one timestep"""
+    hour = time.hour
+    day  = time.weekday()
+    info = sites[scats]
 
-def main():
-  # Test run
-  preds = predict(datetime.now())
-  for key, value in preds.items():
-    print(f"{key}: {value}")
+    coords = _coord_scaler.transform(
+        pd.DataFrame([[info["lat"], info["lon"]]], columns=["NB_LATITUDE", "NB_LONGITUDE"])
+    )[0]
+
+    return np.array([
+        np.sin(2 * np.pi * hour / 24),
+        np.cos(2 * np.pi * hour / 24),
+        np.sin(2 * np.pi * day  / 7),
+        np.cos(2 * np.pi * day  / 7),
+        int(day >= 5),
+        *coords,
+        *_scats_one_hot(scats),
+    ], dtype=np.float32)
+
+
+def _scats_one_hot(scats: int) -> np.ndarray:
+    """return the one-hot encoding for a SCATS site"""
+    scats_columns = [col for col in _feature_columns if col.startswith("SCATS_")]
+    col_name = f"SCATS_{scats:04d}"
+    if col_name not in scats_columns:
+        raise ValueError(f"Unknown SCATS site: {scats}")
+    vec = np.zeros(len(scats_columns), dtype=np.float32)
+    vec[scats_columns.index(col_name)] = 1.0
+    return vec
+
+
+def available_models() -> list[str]:
+    """Return the names of models that loaded successfully."""
+    return list(_models.keys())
+
 
 if __name__ == "__main__":
-  main()
+    preds = predict(datetime.now(), model_name="gru")
+    for sid, flow in preds.items():
+        print(f"{sid}: {flow:.1f} veh/hr")
