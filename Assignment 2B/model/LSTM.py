@@ -7,10 +7,16 @@ from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from keras.layers import Input
 from keras.optimizers import Adam
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import tensorflow as tf
+import random
 # from sklearn.model_selection import cross_val_score
+
+np.random.seed(42)
+tf.random.set_seed(42)
+random.seed(42)
 
 df_model = pd.read_csv('Assignment 2B/data/model_data.csv')
 
@@ -20,30 +26,42 @@ window_size = 24 # num of rows in a day
 X = []
 y = []
 
-target_dates = df_model.index[window_size:]
-
 target = ['traffic_volume']
 
-feature_cols = ['traffic_volume', 'hour_sin', 'hour_cos','day_sin', 'day_cos',
+feature_cols = ['hour_sin', 'hour_cos','day_sin', 'day_cos',
                 'is_weekend', 'lat_scaled', 'lon_scaled']
 
 #scaler_X = MinMaxScaler(feature_range=(0,1))
-scaler_y = MinMaxScaler(feature_range=(0,1))
-
 #scaled_features = scaler_X.fit_transform(df_model[feature_cols].values)
-scaled_target = scaler_y.fit_transform(df_model[["traffic_volume"]].values).flatten()
+#scaled_target = scaler_y.fit_transform(df_model[["traffic_volume"]].values).flatten()
+scaler_y = MinMaxScaler(feature_range=(0,1))
+scaler_y.fit(df_model[target])
+df_model = df_model.sort_values(["SCATS Number", "Date", "hour"])
 
-feature_values = df_model[feature_cols].values
+# Track dates during windowing
+X, y, dates = [], [], []
 
-for i in range(window_size, len(df_model)):
-    X.append(feature_values[i - window_size:i])
-    y.append(scaled_target[i])
+for scats_num, group in df_model.groupby("SCATS Number"):
+    group = group.reset_index(drop=True)
+    feature_values = group[feature_cols].values
+    target_values = scaler_y.transform(group[target]).flatten()
+    group_dates = group['Date'].values
 
-X = np.array(X)
-y = np.array(y)
+    for i in range(window_size, len(group)):
+        X.append(feature_values[i - window_size:i])
+        y.append(target_values[i])
+        dates.append(group_dates[i])
 
-X_train, X_test, y_train, y_test, dates_train, dates_test = train_test_split(
-    X, y, target_dates, test_size=0.2, shuffle=False)
+X = np.array(X, dtype=np.float32)
+y = np.array(y, dtype=np.float32)
+dates = np.array(dates)
+
+# Split by date = every site included in both train and test
+mask = dates < '2006-10-25'
+X_train, X_test = X[mask], X[~mask]
+y_train, y_test = y[mask], y[~mask]
+
+print(f"Train: {X_train.shape}, Test: {X_test.shape}")
 
 def get_lstm(units):
     """LSTM(Long Short-Term Memory)
@@ -67,11 +85,11 @@ def get_lstm(units):
 
     es = EarlyStopping(
     monitor='val_loss',
-    patience=10,              # 10 epochs of no improvement
+    patience=15,              # 15 epochs of no improvement
     restore_best_weights=True, # restore best epoch's weights
     )
 
-    history = model.fit(X_train, y_train, epochs=30, batch_size=16, validation_split=0.2, callbacks=[es])
+    history = model.fit(X_train, y_train, epochs=100, batch_size=64, validation_split=0.1, callbacks=[es])
 
     predictions = model.predict(X_test)
     predictions = scaler_y.inverse_transform(predictions).flatten()
@@ -138,4 +156,4 @@ def get_lstm(units):
 
     return model
 
-model = get_lstm([128, 64, 1])
+model = get_lstm([64, 32, 1])
