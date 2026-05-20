@@ -7,12 +7,10 @@ from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from keras.layers import Input
 from keras.optimizers import Adam
-# from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import tensorflow as tf
 import random
-# from sklearn.model_selection import cross_val_score
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -31,14 +29,14 @@ target = ['traffic_volume']
 feature_cols = ['hour_sin', 'hour_cos','day_sin', 'day_cos',
                 'is_weekend', 'lat_scaled', 'lon_scaled']
 
-#scaler_X = MinMaxScaler(feature_range=(0,1))
-#scaled_features = scaler_X.fit_transform(df_model[feature_cols].values)
-#scaled_target = scaler_y.fit_transform(df_model[["traffic_volume"]].values).flatten()
-scaler_y = MinMaxScaler(feature_range=(0,1))
-scaler_y.fit(df_model[target])
 df_model = df_model.sort_values(["SCATS Number", "Date", "hour"])
 
-# Track dates during windowing
+train_cutoff = '2006-10-25'
+train_rows = df_model[df_model['Date'] < '2006-10-18']
+
+scaler_y = MinMaxScaler(feature_range=(0, 1))
+scaler_y.fit(train_rows[target])
+
 X, y, dates = [], [], []
 
 for scats_num, group in df_model.groupby("SCATS Number"):
@@ -56,10 +54,18 @@ X = np.array(X, dtype=np.float32)
 y = np.array(y, dtype=np.float32)
 dates = np.array(dates)
 
-# Split by date = every site included in both train and test
-mask = dates < '2006-10-25'
-X_train, X_test = X[mask], X[~mask]
-y_train, y_test = y[mask], y[~mask]
+train_mask = dates < '2006-10-18'                                # Oct 01 - Oct 17
+validate_mask   = (dates >= '2006-10-18') & (dates < '2006-10-25')    # Oct 18 - Oct 24
+test_mask  = dates >= '2006-10-25'                               # Oct 25 - Oct 31
+
+X_train, y_train = X[train_mask], y[train_mask]
+X_val, y_val     = X[validate_mask], y[validate_mask]
+X_test, y_test   = X[test_mask], y[test_mask]
+
+# Shuffle SCATS sites for validation
+shuffle_idx = np.random.permutation(len(X_train))
+X_train = X_train[shuffle_idx]
+y_train = y_train[shuffle_idx]
 
 print(f"Train: {X_train.shape}, Test: {X_test.shape}")
 
@@ -79,9 +85,10 @@ def get_lstm(units):
     model.add(Dropout(0.2))
     model.add(LSTM(units[1]))
     model.add(Dropout(0.2))
+    model.add(Dense(16, activation='relu'))
     model.add(Dense(units[2], activation='linear'))
 
-    model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse', metrics=['mae'])
+    model.compile(optimizer=Adam(learning_rate=0.0005), loss='huber', metrics=['mae'])
 
     es = EarlyStopping(
     monitor='val_loss',
@@ -89,7 +96,7 @@ def get_lstm(units):
     restore_best_weights=True, # restore best epoch's weights
     )
 
-    history = model.fit(X_train, y_train, epochs=100, batch_size=64, validation_split=0.1, callbacks=[es])
+    history = model.fit(X_train, y_train, epochs=100, batch_size=64, validation_data=(X_val, y_val), callbacks=[es])
 
     predictions = model.predict(X_test)
     predictions = scaler_y.inverse_transform(predictions).flatten()
@@ -109,7 +116,7 @@ def get_lstm(units):
 
     axes[0].plot(history.history['loss'], label='Train Loss')
     axes[0].plot(history.history['val_loss'], label='Val Loss')
-    axes[0].set_title('Model Loss (MSE)')
+    axes[0].set_title('Model Loss (Huber Loss)')
     axes[0].set_xlabel('Epoch')
     axes[0].set_ylabel('Loss')
     axes[0].legend()
