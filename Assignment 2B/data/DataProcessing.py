@@ -8,12 +8,14 @@ df = pd.read_csv('Scats Data October 2006.csv', dtype={"SCATS Number": str})
 
 df.columns = df.columns.str.strip()
 df["SCATS Number"] = df["SCATS Number"].str.zfill(4)
-
+df.loc[df["NB_LATITUDE"] == 0, "NB_LATITUDE"] = np.nan
+df.loc[df["NB_LONGITUDE"] == 0, "NB_LONGITUDE"] = np.nan
+df["NB_LATITUDE"] = df.groupby("SCATS Number")["NB_LATITUDE"].transform(lambda x: x.fillna(x.median()))
+df["NB_LONGITUDE"] = df.groupby("SCATS Number")["NB_LONGITUDE"].transform(lambda x: x.fillna(x.median()))
 # Save map data
 df_map = df[["SCATS Number", "Location", "NB_LATITUDE", "NB_LONGITUDE"]].copy()
 df_map = df_map.drop_duplicates(subset=["SCATS Number"])
 df_map.to_csv("map_data.csv", index=False)
-
 coord_scaler = StandardScaler()
 df[["lat_scaled", "lon_scaled"]] = coord_scaler.fit_transform(df[["NB_LATITUDE", "NB_LONGITUDE"]])
 joblib.dump(coord_scaler, Path(__file__).parent / "coord_scaler.pkl")
