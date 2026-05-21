@@ -3,12 +3,14 @@ import sys
 import os
 import random
 import pytest
-from datetime import datetime
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 from pathlib import Path
+from collections import defaultdict
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from boroondara_search import find_routes
-from predict import predict
+from predict import predict, predict_single
 from graph_builder import _haversine_km, _load_sites
 from travel_time import flow_to_speed
 
@@ -78,7 +80,7 @@ def test_min_travel_time(test_id):
 def test_flow_to_speed_conversion(_):
   '''Tests that the program accurately converts predicted traffic flow to speed.'''
   site  = random.choice(list(sites.keys()))
-  flow  = global_flow_dict[site]
+  flow  = round(global_flow_dict[site])
   speed = flow_to_speed(flow)
   if abs(speed - 60.0) <= 1e-9:
     assert flow <= 351
@@ -98,10 +100,52 @@ def test_swap(test_id):
   assert route_normal["path"] == list(reversed(route_swapped["path"]))
 
 def test_predictions():
-  # TODO: Compare predictions of different models at one site across a day using charts
-  pass
+  '''Plot predictions made by different models at random sites across a day'''
+  site_ids = random.sample(list(sites.keys()), 12)
+  preds   = defaultdict(list)
+  models  = ["lstm", "gru", "rnn"]
 
-routes = run_test_case("0002")
-for route in routes:
-  for key, value in route.items():
-    print(f"{key}: {value}")
+  start_date = datetime(2024, 1, 1)
+  random_dt  = start_date + timedelta(days=random.randint(0, 365))
+
+  # Create subplot grid
+  fig, axes = plt.subplots(nrows=3, ncols=4, figsize=(12, 8))
+  axes = axes.flatten()  # FLatten for iteration
+  hours = list(range(24))
+
+  for ax, site_id in zip(axes, site_ids):
+    preds = defaultdict(list)
+    for i in hours:
+      # Generate time stamps at each hour of the day
+      time = random_dt.replace(hour=i, minute=0, second=0, microsecond=0)
+      for model_name in models:
+        pred = predict_single(
+          scats_number=site_id,
+          time=time,
+          model_name=model_name,
+          time_step=24
+        )
+        preds[model_name].append(pred)
+
+    # Plot predictions for this site
+    for model_name in models:
+      ax.plot(hours, preds[model_name], label=model_name)
+    ax.set_title(f"SCATS site {site_id:4d}", fontsize=7)
+    ax.set_xlabel("Hour", fontsize=7)
+    ax.set_ylabel("Flow", fontsize=7)
+    ax.tick_params(axis='both', labelsize=6)
+  
+  fig.suptitle(
+    f"Traffic predictions on {random_dt.date()}",
+    fontsize=12
+  )
+
+  # One global legend for the subplots
+  handles, labels = axes[0].get_legend_handles_labels()
+  fig.legend(handles, labels, loc="upper right", fontsize=9)
+
+  plt.tight_layout()
+  plt.show()
+
+if __name__ == "__main__":
+  test_predictions()
