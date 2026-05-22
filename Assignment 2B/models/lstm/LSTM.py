@@ -22,7 +22,15 @@ BASE   = Path(__file__).parent
 MODELS = BASE.parent
 DATA   = MODELS.parent / "data"
 
-df_model = pd.read_csv(DATA / "model_data.csv")
+data_dir = DATA / "model_data.csv"
+
+df_model = pd.read_csv(data_dir, dtype={"SCATS Number": str})
+df_model.columns = df_model.columns.str.strip()
+df_model["SCATS Number"] = df_model["SCATS Number"].str.zfill(4)
+df_model = df_model.sort_values(["Date", "SCATS Number", "hour"]).reset_index(drop=True)
+df_model["SCATS_ID"] = df_model["SCATS Number"]
+num_intersections = df_model["SCATS Number"].nunique()
+df_model = pd.get_dummies(df_model, columns=["SCATS Number"], prefix="SCATS")
 
 print(df_model)
 
@@ -33,11 +41,9 @@ y = []
 target = ['traffic_volume']
 
 feature_cols = ['hour_sin', 'hour_cos','day_sin', 'day_cos',
-                'is_weekend', 'lat_scaled', 'lon_scaled']
+                'is_weekend', 'lat_scaled', 'lon_scaled'] + [col for col in df_model.columns if col.startswith("SCATS") and col != "SCATS_ID"]
 
-df_model = df_model.sort_values(["SCATS Number", "Date", "hour"])
-
-train_rows = df_model[df_model['Date'] < '2006-10-18']
+train_rows = df_model[df_model['Date'] < '2006-10-22']
 
 scaler_y = MinMaxScaler(feature_range=(0, 1))
 scaler_y.fit(train_rows[target])
@@ -45,7 +51,7 @@ joblib.dump(scaler_y, MODELS / "lstm_traffic_volume_scaler.pkl")
 
 X, y, dates = [], [], []
 
-for scats_num, group in df_model.groupby("SCATS Number"):
+for scats_num, group in df_model.groupby("SCATS_ID"):
     group = group.reset_index(drop=True)
     feature_values = group[feature_cols].values
     target_values = scaler_y.transform(group[target]).flatten()
@@ -60,13 +66,14 @@ X = np.array(X, dtype=np.float32)
 y = np.array(y, dtype=np.float32)
 dates = np.array(dates)
 
-train_mask = dates < '2006-10-18'                                     # Oct 01 - Oct 17
-validate_mask   = (dates >= '2006-10-18') & (dates < '2006-10-25')    # Oct 18 - Oct 24
-test_mask  = dates >= '2006-10-25'                                    # Oct 25 - Oct 31
+# Custom Test/Validate/Train Split
+train_mask = dates < '2006-10-22'                                   # Oct 01 - Oct 21
+validate_mask = (dates >= '2006-10-22') & (dates < '2006-10-25')    # Oct 22 - Oct 24
+test_mask = dates >= '2006-10-25'                                   # Oct 25 - Oct 31
 
 X_train, y_train = X[train_mask], y[train_mask]
-X_val, y_val     = X[validate_mask], y[validate_mask]
-X_test, y_test   = X[test_mask], y[test_mask]
+X_val, y_val = X[validate_mask], y[validate_mask]
+X_test, y_test = X[test_mask], y[test_mask]
 
 # Shuffle SCATS sites for validation
 shuffle_idx = np.random.permutation(len(X_train))
