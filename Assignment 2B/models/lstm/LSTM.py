@@ -40,7 +40,7 @@ target = ['traffic_volume']
 
 feature_cols = ['hour_sin', 'hour_cos','day_sin', 'day_cos',
                 'is_weekend', 'lat_scaled', 'lon_scaled'] + [col for col in df_model.columns if col.startswith("SCATS") and col != "SCATS_ID"]
-
+train_rows = df_model[df_model['Date'] < '2006-10-22']
 train_rows = df_model[df_model['Date'] < '2006-10-22']
 
 scaler_y = MinMaxScaler(feature_range=(0, 1))
@@ -68,8 +68,14 @@ dates = np.array(dates)
 train_mask = dates < '2006-10-22'                                   # Oct 01 - Oct 21
 validate_mask = (dates >= '2006-10-22') & (dates < '2006-10-25')    # Oct 22 - Oct 24
 test_mask = dates >= '2006-10-25'                                   # Oct 25 - Oct 31
+# Custom Test/Validate/Train Split
+train_mask = dates < '2006-10-22'                                   # Oct 01 - Oct 21
+validate_mask = (dates >= '2006-10-22') & (dates < '2006-10-25')    # Oct 22 - Oct 24
+test_mask = dates >= '2006-10-25'                                   # Oct 25 - Oct 31
 
 X_train, y_train = X[train_mask], y[train_mask]
+X_val, y_val = X[validate_mask], y[validate_mask]
+X_test, y_test = X[test_mask], y[test_mask]
 X_val, y_val = X[validate_mask], y[validate_mask]
 X_test, y_test = X[test_mask], y[test_mask]
 
