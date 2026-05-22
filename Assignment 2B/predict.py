@@ -79,8 +79,7 @@ def predict_single(
 
   for i in range(time_step - 1, -1, -1):
     t = time - timedelta(hours=i)
-    use_dummies = not(model_name == "lstm")
-    X.append(_build_features(t, scats_number, use_dummies=use_dummies))
+    X.append(_build_features(t, scats_number))
 
   X = np.array(X, dtype=np.float32)
   X = np.expand_dims(X, axis=0)
@@ -145,4 +144,4 @@ if __name__ == "__main__":
   for sid, flow in preds.items():
     print(f"{sid}: {flow:1f} veh/hr")
 
-  # print(predict_single(970, datetime.now(), model_name="lstm"))
+  print(predict_single(970, datetime.now(), model_name="lstm"))
