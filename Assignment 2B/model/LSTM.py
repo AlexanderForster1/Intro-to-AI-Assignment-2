@@ -59,13 +59,14 @@ X = np.array(X, dtype=np.float32)
 y = np.array(y, dtype=np.float32)
 dates = np.array(dates)
 
-train_mask = dates < '2006-10-22'                                     # Oct 01 - Oct 21
-validate_mask   = (dates >= '2006-10-22') & (dates < '2006-10-25')    # Oct 22 - Oct 24
-test_mask  = dates >= '2006-10-25'                                    # Oct 25 - Oct 31
+# Custom Test/Validate/Train Split
+train_mask = dates < '2006-10-22'                                   # Oct 01 - Oct 21
+validate_mask = (dates >= '2006-10-22') & (dates < '2006-10-25')    # Oct 22 - Oct 24
+test_mask = dates >= '2006-10-25'                                   # Oct 25 - Oct 31
 
 X_train, y_train = X[train_mask], y[train_mask]
-X_val, y_val     = X[validate_mask], y[validate_mask]
-X_test, y_test   = X[test_mask], y[test_mask]
+X_val, y_val = X[validate_mask], y[validate_mask]
+X_test, y_test = X[test_mask], y[test_mask]
 
 # Shuffle SCATS sites for validation
 shuffle_idx = np.random.permutation(len(X_train))
