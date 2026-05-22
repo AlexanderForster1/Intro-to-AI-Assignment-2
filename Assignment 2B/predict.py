@@ -15,7 +15,7 @@ _feature_columns = joblib.load(_MODELS / "feature_columns.pkl")
 
 def _load_models() -> dict:
   """load available trained models. missing model files are skipped"""
-  from tensorflow.keras.models import load_model
+  from keras.models import load_model
 
   registry = {}
 
@@ -77,10 +77,14 @@ def predict_single(
 
   X = []
 
+  # RNN expects hour 0 -> hour 3 of the input date rather than a sliding window up of the past 24 time steps up to the current hour
+  if model_name == "rnn":
+    hour = time.hour  # Remember the hour to be predicted
+    time = time.replace(hour=23)  
+
   for i in range(time_step - 1, -1, -1):
     t = time - timedelta(hours=i)
-    use_dummies = not(model_name == "lstm")
-    X.append(_build_features(t, scats_number, use_dummies=use_dummies))
+    X.append(_build_features(t, scats_number))
 
   X = np.array(X, dtype=np.float32)
   X = np.expand_dims(X, axis=0)
@@ -98,7 +102,7 @@ def predict_single(
   if model_name == "gru":
     return float(preds[i][0])
   elif model_name == "rnn":
-    return float(preds[i][-1][0])
+    return float(preds[i][hour][0])
   else:
     return float(preds[i].flat[0])
 
