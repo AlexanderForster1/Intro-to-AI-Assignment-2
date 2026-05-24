@@ -145,7 +145,7 @@ def available_models() -> list[str]:
 
 
 if __name__ == "__main__":
-  preds = predict(datetime.now(), model_name="lstm")
+  preds = predict(datetime.now(), model_name="rnn")
   for sid, flow in preds.items():
     print(f"{sid}: {flow:1f} veh/hr")
 

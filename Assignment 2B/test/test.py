@@ -4,6 +4,7 @@ import os
 import random
 import pytest
 import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
@@ -33,7 +34,6 @@ def run_test_case(
   algorithm: str="AS", 
   max_routes: int=5,
   use_global=False) -> list:
-  '''Tests that find_routes returns an empty array if origin and destination are the same.'''
   tc = test_cases[test_id]
   origin, destination, time = (
     tc["origin"],
@@ -100,7 +100,7 @@ def test_swap(test_id):
   assert route_normal["path"] == list(reversed(route_swapped["path"]))
 
 def test_predictions():
-  '''Plot predictions made by different models at random sites across a day'''
+  '''Plots predictions made by different models at random sites across a day'''
   site_ids = random.sample(list(sites.keys()), 12)
   preds   = defaultdict(list)
   models  = ["lstm", "gru", "rnn"]
@@ -147,5 +147,49 @@ def test_predictions():
   plt.tight_layout()
   plt.show()
 
+def test_predicted_time():
+  '''Plots travel time predicted by differet models'''
+  test_ids = [f"{i:04d}" for i in range(2, 16)]
+  models   = ['lstm', 'gru', 'rnn']
+  preds    = defaultdict(list)
+
+  # Predictions based on the exact datetime in each test do not really matter for this comparison so we're just predicting based on the current time to save execution time
+  flow_dicts = {
+    "lstm": predict(datetime.now(), model_name="lstm"),
+    "gru" : predict(datetime.now(), model_name="gru"),
+    "rnn" : global_flow_dict,
+  }
+
+  for model in models:
+    for test_id in test_ids:
+      tc = test_cases[test_id]
+      # Ignore time in test case
+      origin, destination = (
+        tc["origin"],
+        tc["destination"],
+      )
+      route = find_routes(
+        origin, destination, 
+        flow_dict=flow_dicts[model], 
+        max_routes=1
+      )[0]
+      preds[model].append(route["cost_seconds"])
+  
+  fig, ax = plt.subplots(figsize=(13, 7))
+  
+  x = np.arange(len(test_ids))
+  width = 0.25  # width of the bars
+
+  for i, (model_name, values) in enumerate(preds.items()):
+    ax.bar(x + i * width, values, width, label=model_name)
+
+  ax.set_title(f"Predicted Travel Time for Test Cases {test_ids[0]} - {test_ids[-1]}")
+  ax.set_xlabel("Test case")
+  ax.set_ylabel("Travel time (s)")
+  ax.set_xticks(x + width, test_ids)
+  ax.legend()
+
+  plt.show()
+
 if __name__ == "__main__":
-  test_predictions()
+  test_predicted_time()

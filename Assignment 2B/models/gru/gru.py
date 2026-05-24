@@ -11,10 +11,10 @@ from sklearn.metrics import (
   mean_absolute_percentage_error, 
   r2_score
 )
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import GRU, Dense, TimeDistributed, LayerNormalization
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
+from keras.models import Sequential
+from keras.layers import GRU, Dense, TimeDistributed, LayerNormalization
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, asdict
