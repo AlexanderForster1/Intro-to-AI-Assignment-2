@@ -99,10 +99,9 @@ def test_swap(test_id):
   route_swapped = find_routes(destination, origin, global_flow_dict, max_routes=1)[0]
   assert route_normal["path"] == list(reversed(route_swapped["path"]))
 
-def test_predictions():
+def compare_predictions():
   '''Plots predictions made by different models at random sites across a day'''
   site_ids = random.sample(list(sites.keys()), 12)
-  preds   = defaultdict(list)
   models  = ["lstm", "gru", "rnn"]
 
   start_date = datetime(2024, 1, 1)
@@ -147,7 +146,7 @@ def test_predictions():
   plt.tight_layout()
   plt.show()
 
-def test_predicted_time():
+def compare_predicted_time():
   '''Plots travel time predicted by differet models'''
   test_ids = [f"{i:04d}" for i in range(2, 16)]
   models   = ['lstm', 'gru', 'rnn']
@@ -191,5 +190,70 @@ def test_predicted_time():
 
   plt.show()
 
+def compare_weekday_weekend():
+  """Plots weekday vs weekend predictions over 24 hours
+  for a single week and a single SCATS site."""
+  site_id = random.choice(list(sites.keys()))
+  models = ["lstm", "gru", "rnn"]
+  hours = list(range(24))
+
+  start_of_year = datetime(2007, 1, 1)
+  random_week = random.randint(0, 51)
+  # Ensure start date is Monday
+  monday = start_of_year + timedelta(weeks=random_week)
+  monday = monday - timedelta(days=monday.weekday())
+
+  # Create subplot grid
+  fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5), sharey=True)
+
+  for ax, model_name in zip(axes, models):
+    weekday_preds = []
+    weekend_preds = []
+
+    for hour in hours:
+      weekday_hour_preds = []
+      weekend_hour_preds = []
+
+      # Sample 4 weeks
+      for day_offset in range(28):
+        dt = monday + timedelta(days=day_offset)
+        time = dt.replace(hour=hour, minute=0, second=0, microsecond=0)
+        pred = predict_single(
+          scats_number=site_id,
+          time=time,
+          model_name=model_name,
+          time_step=24
+        )
+        # Monday-Friday
+        if dt.weekday() < 5:
+          weekday_hour_preds.append(pred)
+        # Saturday-Sunday
+        else:
+          weekend_hour_preds.append(pred)
+
+      weekday_preds.append(np.mean(weekday_hour_preds))
+      weekend_preds.append(np.mean(weekend_hour_preds))
+
+    ax.plot(hours, weekday_preds, label="Weekday", linewidth=2)
+    ax.plot(hours, weekend_preds, label="Weekend", linewidth=2)
+    ax.set_title(model_name.upper())
+    ax.set_xlabel("Hour of Day")
+    ax.grid(alpha=0.3)
+
+  axes[0].set_ylabel("Predicted Traffic Volume")
+  fig.suptitle(
+    f"Weekday vs Weekend Traffic Predictions\nSCATS Site {site_id}",
+    fontsize=14
+  )
+
+  # Shared legend
+  handles, labels = axes[0].get_legend_handles_labels()
+  fig.legend(handles, labels, loc="upper right")
+
+  plt.tight_layout()
+  plt.show()
+
 if __name__ == "__main__":
-  test_predicted_time()
+  compare_predictions()
+  compare_predicted_time()
+  compare_weekday_weekend()
