@@ -11,7 +11,7 @@ from collections import defaultdict
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from boroondara_search import find_routes
-from predict import predict, predict_single
+from predictor import predict, predict_single
 from graph_builder import _haversine_km, _load_sites
 from travel_time import flow_to_speed
 
