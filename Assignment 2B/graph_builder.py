@@ -118,6 +118,8 @@ def _build_same_road_edges(
 CROSS_ROAD_DENY = {
     (3180, 4063),
     (4063, 3180),
+    (4270, 4324),   
+    (4324, 4270),  
 }
 
 def _build_cross_road_edges(
