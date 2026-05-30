@@ -12,22 +12,32 @@ _MODELS = _BASE / "models"
 
 _coord_scaler    = joblib.load(_DATA / "coord_scaler.pkl")
 _feature_columns = joblib.load(_MODELS / "feature_columns.pkl")
+_sites           = _load_sites(_DATA / "map_data.csv")
+
 
 def _load_models() -> dict:
     """load available trained models. missing model files are skipped"""
-    from tensorflow.keras.models import load_model
+    from keras.models import load_model
 
     registry = {}
 
-    gru_path = _MODELS / "gru" / "gru_traffic_model.keras"
-    gru_scaler_path = _MODELS / "traffic_volume_scaler.pkl"
+    gru_path        = _MODELS / "gru" / "gru_traffic_model.keras"
+    gru_scaler_path = _MODELS / "gru_traffic_volume_scaler.pkl"
     if gru_path.exists():
         registry["gru"] = {
             "model" : load_model(gru_path),
             "scaler": joblib.load(gru_scaler_path) if gru_scaler_path.exists() else None,
         }
 
-    rnn_path = _MODELS / "rnn_traffic_model.keras"
+    lstm_path        = _MODELS / "lstm" / "lstm_traffic_model.keras"
+    lstm_scaler_path = _MODELS / "lstm_traffic_volume_scaler.pkl"
+    if lstm_path.exists():
+        registry["lstm"] = {
+            "model" : load_model(lstm_path),
+            "scaler": joblib.load(lstm_scaler_path) if lstm_scaler_path.exists() else None,
+        }
+
+    rnn_path = _MODELS / "rnn" / "rnn_traffic_model.keras"
     if rnn_path.exists():
         registry["rnn"] = {
             "model" : load_model(rnn_path),
@@ -35,6 +45,7 @@ def _load_models() -> dict:
         }
 
     return registry
+
 
 _models = _load_models()
 
@@ -45,24 +56,39 @@ def predict(time: datetime, model_name: str = "gru", time_step: int = 24) -> dic
     returns a dict mapping each SCATS site number to its predicted flow (vehicles/hour)
     falls back to 0.0 for all sites if the requested model is unavailable
     """
-    sites   = _load_sites(_DATA / "map_data.csv")
-    site_ids = list(sites.keys())
+    flow_dict = {}
+    for scats_number in _sites:
+        flow_dict[scats_number] = predict_single(scats_number, time, model_name, time_step)
+    return flow_dict
 
+
+def predict_single(
+    scats_number: int,
+    time: datetime,
+    model_name: str = "gru",
+    time_step: int = 24,
+) -> float:
+    """predict hourly traffic flow for a single SCATS site at the given datetime
+    returns predicted flow (vehicles/hour), falls back to 0.0
+    if the requested model is unavailable"""
     entry = _models.get(model_name)
     if entry is None or entry["model"] is None:
-        return {sid: 0.0 for sid in site_ids}
+        return 0.0
 
     model = entry["model"]
 
+    # RNN expects a full day window ending at hour 23, then indexes into the output
+    if model_name == "rnn":
+        hour = time.hour
+        time = time.replace(hour=23)
+
     X = []
-    for scats, info in sites.items():
-        sequence = []
-        for i in range(time_step - 1, -1, -1):
-            t = time - timedelta(hours=i)
-            sequence.append(_build_features(t, scats, sites))
-        X.append(sequence)
+    for i in range(time_step - 1, -1, -1):
+        t = time - timedelta(hours=i)
+        X.append(_build_features(t, scats_number))
 
     X = np.array(X, dtype=np.float32)
+    X = np.expand_dims(X, axis=0)
 
     assert X.shape[-1] == model.input_shape[-1], (
         f"Feature mismatch: got {X.shape[-1]}, model expects {model.input_shape[-1]}"
@@ -74,23 +100,19 @@ def predict(time: datetime, model_name: str = "gru", time_step: int = 24) -> dic
     if scaler is not None:
         preds = scaler.inverse_transform(preds.reshape(-1, 1))
 
-    flow_dict = {}
-    for i, sid in enumerate(site_ids):
-        if model_name == "gru":
-            flow_dict[sid] = float(preds[i][0])
-        elif model_name == "rnn":
-            flow_dict[sid] = float(preds[i][-1][0])
-        else:
-            flow_dict[sid] = float(preds[i].flat[0])
-
-    return flow_dict
+    if model_name == "gru":
+        return float(preds[0][0])
+    elif model_name == "rnn":
+        return float(preds[0][hour][0])
+    else:
+        return float(preds[0].flat[0])
 
 
-def _build_features(time: datetime, scats: int, sites: dict) -> np.ndarray:
+def _build_features(time: datetime, scats: int) -> np.ndarray:
     """build the feature vector for one site at one timestep"""
     hour = time.hour
     day  = time.weekday()
-    info = sites[scats]
+    info = _sites[scats]
 
     coords = _coord_scaler.transform(
         pd.DataFrame([[info["lat"], info["lon"]]], columns=["NB_LATITUDE", "NB_LONGITUDE"])
