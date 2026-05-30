@@ -99,6 +99,17 @@ def test_swap(test_id):
   route_swapped = find_routes(destination, origin, global_flow_dict, max_routes=1)[0]
   assert route_normal["path"] == list(reversed(route_swapped["path"]))
 
+@pytest.mark.parametrize("test_id", [f"{i:04d}" for i in range(2, 16)])
+def test_consistency(test_id):
+  '''Tests that running the same query multiple times returns identical routes and travel time.'''
+  route = run_test_case(test_id, max_routes=1)[0]
+  path = route["path"]
+  time = route["cost_seconds"]
+  for i in range(4):
+    route = run_test_case(test_id, max_routes=1)[0]
+    assert route["path"] == path
+    assert route["cost_seconds"] == time
+
 def compare_predictions():
   '''Plots predictions made by different models at random sites across a day'''
   site_ids = random.sample(list(sites.keys()), 12)
