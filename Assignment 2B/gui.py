@@ -202,7 +202,7 @@ class App(tk.Tk):
         self._results_canvas.unbind_all('<Down>')
 
     def _on_map_zoom(self, event):
-        factor = 1.1 if event.delta > 0 else 0.9
+        factor = 0.9 if event.delta > 0 else 1.1
         xlim = self._ax.get_xlim()
         ylim = self._ax.get_ylim()
         x_mid = (xlim[0] + xlim[1]) / 2
