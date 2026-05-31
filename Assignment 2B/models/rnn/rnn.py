@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from pathlib import Path
-data_dir = Path(__file__).parent.parent.parent / "data" / "model_data.csv"
+data_dir = Path(__file__).parent.parent.parent / "data" / "updated_data.csv"
 
 df = pd.read_csv(data_dir, dtype={"SCATS Number": str})
 df.columns = df.columns.str.strip()
@@ -21,6 +21,8 @@ feature_cols = [
     "hour_cos",
     "day_sin",
     "day_cos",
+    "month_cos",
+    "month_sin",
     "is_weekend",
     "lat_scaled",
     "lon_scaled"
@@ -180,4 +182,4 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-final_model.save('rnn_traffic_model.keras')
+final_model.save('updated_rnn_traffic_model.keras')

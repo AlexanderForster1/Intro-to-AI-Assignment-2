@@ -108,7 +108,7 @@ class App(tk.Tk):
         self._model_var = tk.StringVar(value='gru')
         self._model_cb = ttk.Combobox(
             left, textvariable=self._model_var,
-            values=['gru', 'lstm', 'rnn'], width=38, state='readonly'
+            values=['gru', 'lstm', 'rnn', 'updated_rnn'], width=38, state='readonly'
         )
         self._model_cb.pack(pady=(0, 6), fill=tk.X)
 

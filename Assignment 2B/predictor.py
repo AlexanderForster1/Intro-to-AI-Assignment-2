@@ -44,6 +44,13 @@ def _load_models() -> dict:
             "scaler": None,
         }
 
+    updated_rnn_path = _MODELS / "rnn" / "updated_rnn_traffic_model.keras"
+    if updated_rnn_path.exists():
+        registry["updated_rnn"] = {
+            "model" : load_model(updated_rnn_path),
+            "scaler": None,
+        }
+
     return registry
 
 
@@ -77,15 +84,18 @@ def predict_single(
 
     model = entry["model"]
 
-    # RNN expects a full day window ending at hour 23, then indexes into the output
-    if model_name == "rnn":
+    # RNN models expect a full day window ending at hour 23, then index into the output
+    if model_name in {"rnn", "updated_rnn"}:
         hour = time.hour
         time = time.replace(hour=23)
 
     X = []
     for i in range(time_step - 1, -1, -1):
         t = time - timedelta(hours=i)
-        X.append(_build_features(t, scats_number))
+        if model_name == "updated_rnn":
+            X.append(_build_updated_rnn_features(t, scats_number))
+        else:
+            X.append(_build_features(t, scats_number))
 
     X = np.array(X, dtype=np.float32)
     X = np.expand_dims(X, axis=0)
@@ -102,7 +112,7 @@ def predict_single(
 
     if model_name == "gru":
         return float(preds[0][0])
-    elif model_name == "rnn":
+    elif model_name in {"rnn", "updated_rnn"}:
         return float(preds[0][hour][0])
     else:
         return float(preds[0].flat[0])
@@ -123,6 +133,30 @@ def _build_features(time: datetime, scats: int) -> np.ndarray:
         np.cos(2 * np.pi * hour / 24),
         np.sin(2 * np.pi * day  / 7),
         np.cos(2 * np.pi * day  / 7),
+        int(day >= 5),
+        *coords,
+        *_scats_one_hot(scats),
+    ], dtype=np.float32)
+
+
+def _build_updated_rnn_features(time: datetime, scats: int) -> np.ndarray:
+    """build the month-aware feature vector used by updated_rnn_traffic_model.keras"""
+    hour = time.hour
+    day = time.weekday()
+    month = time.month
+    info = _sites[scats]
+
+    coords = _coord_scaler.transform(
+        pd.DataFrame([[info["lat"], info["lon"]]], columns=["NB_LATITUDE", "NB_LONGITUDE"])
+    )[0]
+
+    return np.array([
+        np.sin(2 * np.pi * hour / 24),
+        np.cos(2 * np.pi * hour / 24),
+        np.sin(2 * np.pi * day / 7),
+        np.cos(2 * np.pi * day / 7),
+        np.cos(2 * np.pi * month / 12),
+        np.sin(2 * np.pi * month / 12),
         int(day >= 5),
         *coords,
         *_scats_one_hot(scats),
